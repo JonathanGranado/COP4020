@@ -87,20 +87,38 @@ public class Token implements IToken {
         } else {
             System.out.println("ERROR. Token is not INT_LIT");
         }
-    return -1;
+        return -1;
     }
 
     @Override
     public float getFloatValue() {
-        return 0;
+        if (kind == Kind.FLOAT_LIT) {
+            return Float.parseFloat(getText());
+        } else {
+            System.out.println("ERROR. Token is not INT_LIT");
+        }
+        return -1;
     }
 
     @Override
     public boolean getBooleanValue() {
+        String substring = input.substring(pos, pos + length);
+        if (kind == Kind.BOOLEAN_LIT) {
+            if (substring == "true") {
+                return true;
+            } else if (substring == "false") {
+                return false;
+            }
+        } else {
+            System.out.println("ERROR. Token is not BOOLEAN_LIT");
+        }
         return false;
     }
 
     @Override
+    //returns the String represented by the characters of this token if kind is STRING_LIT
+    //The delimiters should be removed and escape sequences replaced by the characters they represent.
+    //TODO: set it up so the escape sequences are represented correctly
     public String getStringValue() {
         return null;
     }
