@@ -5,6 +5,19 @@ public class Token implements IToken {
 
     Map<String, Kind> reservedMap = new HashMap<>();
 
+    final Kind kind;
+    final String input;
+    final int pos;
+    final int length;
+
+    public Token(Kind _kind,String _input, int _pos, int _length){
+        this.kind = _kind;
+        this.input = _input;
+        this.pos = _pos;
+        this.length = _length;
+    }
+
+
     // Inserting reserved words into map
 
     public Map<String, Kind> getReservedMap() {
@@ -51,7 +64,8 @@ public class Token implements IToken {
     }
     @Override
     public Kind getKind() {
-        return null;
+
+        return kind;
     }
 
     @Override
