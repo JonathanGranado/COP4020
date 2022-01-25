@@ -1,16 +1,18 @@
 package edu.ufl.cise.plc;
-import java.util.*;
+
+import java.util.HashMap;
+import java.util.Map;
+
 public class Token implements IToken {
 
-
-    Map<String, Kind> reservedMap = new HashMap<>();
 
     final Kind kind;
     final String input;
     final int pos;
     final int length;
+    Map<String, Kind> reservedMap = new HashMap<>();
 
-    public Token(Kind _kind,String _input, int _pos, int _length){
+    public Token(Kind _kind, String _input, int _pos, int _length) {
         this.kind = _kind;
         this.input = _input;
         this.pos = _pos;
@@ -59,18 +61,18 @@ public class Token implements IToken {
         return reservedMap;
     }
 
-    public boolean isReserved(String str){
+    public boolean isReserved(String str) {
         return reservedMap.containsKey(str);
     }
+
     @Override
     public Kind getKind() {
-
         return kind;
     }
 
     @Override
     public String getText() {
-        return null;
+        return input.substring(pos, pos + length);
     }
 
     @Override
@@ -80,7 +82,12 @@ public class Token implements IToken {
 
     @Override
     public int getIntValue() {
-        return 0;
+        if (kind == Kind.INT_LIT) {
+            return Integer.parseInt(getText());
+        } else {
+            System.out.println("ERROR. Token is not INT_LIT");
+        }
+    return -1;
     }
 
     @Override
