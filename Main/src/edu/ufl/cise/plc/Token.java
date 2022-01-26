@@ -1,24 +1,20 @@
 package edu.ufl.cise.plc;
-
-import java.util.HashMap;
-import java.util.Map;
-
+import java.util.*;
 public class Token implements IToken {
-
 
     final Kind kind;
     final String input;
     final int pos;
     final int length;
-    Map<String, Kind> reservedMap = new HashMap<>();
 
-    public Token(Kind _kind, String _input, int _pos, int _length) {
+    public Token(Kind _kind,String _input, int _pos, int _length){
         this.kind = _kind;
         this.input = _input;
         this.pos = _pos;
         this.length = _length;
     }
 
+    Map<String, Kind> reservedMap = new HashMap<>();
 
     // Inserting reserved words into map
 
@@ -61,13 +57,12 @@ public class Token implements IToken {
         return reservedMap;
     }
 
-    public boolean isReserved(String str) {
+    public boolean isReserved(String str){
         return reservedMap.containsKey(str);
     }
-
     @Override
     public Kind getKind() {
-        return kind;
+        return Kind.EOF;
     }
 
     @Override
@@ -82,10 +77,10 @@ public class Token implements IToken {
 
     @Override
     public int getIntValue() {
-        if (kind == Kind.INT_LIT) {
+        if(kind == Kind.INT_LIT){
             return Integer.parseInt(getText());
-        } else {
-            System.out.println("ERROR. Token is not INT_LIT");
+        }else{
+            System.out.println("ERROR, Token is not INT_LIT");
         }
         return -1;
     }
@@ -120,6 +115,30 @@ public class Token implements IToken {
     //The delimiters should be removed and escape sequences replaced by the characters they represent.
     //TODO: set it up so the escape sequences are represented correctly
     public String getStringValue() {
+        String subString = input.substring(pos, pos + length);
+        String outPut = "";
+        if(kind == Kind.STRING_LIT){
+            for(int i = 0; i < input.length(); i++){
+                if(input.charAt(i) == ' '){
+                    i++;
+                }
+                if(input.charAt(i) == '\n'){
+                    subString += "\n" ;
+                }
+                if(input.charAt(i) == '\t'){
+                    subString += "\t";
+                }
+                if(input.charAt(i) == '\b'){
+                    subString += "\b";
+                }
+                if(input.charAt(i) == '\f'){
+                    subString += "\f";
+                }
+                if(input.charAt(i) == '\r'){
+                    subString += "\r";
+                }
+            }
+        }
         return null;
     }
 }

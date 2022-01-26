@@ -1,7 +1,8 @@
 package edu.ufl.cise.plc;
 
-public class Lexer implements ILexer{
+public class Lexer implements ILexer  {
 
+    char[] chars;
     public static enum State{
         START,
         HAVE_ZERO,
@@ -16,6 +17,11 @@ public class Lexer implements ILexer{
         IN_IDENT,
         IN_FLOAT,
     }
+
+    public Lexer(String input){
+        chars = new char[input.length()];
+    }
+
     @Override
     public IToken next() throws LexicalException {
         return null;

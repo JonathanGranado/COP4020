@@ -1,7 +1,5 @@
 package edu.ufl.cise.plc;
 
-import edu.ufl.cise.plc.IToken.Kind;
-
 public interface IToken {
 
     public record SourceLocation(int line, int column) {}

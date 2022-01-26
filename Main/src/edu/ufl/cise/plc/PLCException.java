@@ -7,7 +7,7 @@ package edu.ufl.cise.plc;
 import edu.ufl.cise.plc.IToken.SourceLocation;
 
 @SuppressWarnings("serial")
-public class PLCException extends Exception {
+class PLCException extends Exception {
 
     public PLCException(String message) {
         super(message);

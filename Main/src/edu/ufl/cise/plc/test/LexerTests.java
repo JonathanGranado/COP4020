@@ -3,14 +3,8 @@ package edu.ufl.cise.plc.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
-
 import org.junit.jupiter.api.Test;
-
-import edu.ufl.cise.plc.CompilerComponentFactory;
-import edu.ufl.cise.plc.ILexer;
-import edu.ufl.cise.plc.IToken;
-import edu.ufl.cise.plc.IToken.Kind;
-import edu.ufl.cise.plc.LexicalException;
+import edu.ufl.cise.plc.*;
 
 
 public class LexerTests {
@@ -28,19 +22,19 @@ public class LexerTests {
     }
 
     //check that this token has the expected kind
-    void checkToken(IToken t, Kind expectedKind) {
+    void checkToken(IToken t, IToken.Kind expectedKind) {
         assertEquals(expectedKind, t.getKind());
     }
 
     //check that the token has the expected kind and position
-    void checkToken(IToken t, Kind expectedKind, int expectedLine, int expectedColumn){
+    void checkToken(IToken t, IToken.Kind expectedKind, int expectedLine, int expectedColumn){
         assertEquals(expectedKind, t.getKind());
         assertEquals(new IToken.SourceLocation(expectedLine,expectedColumn), t.getSourceLocation());
     }
 
     //check that this token is an IDENT and has the expected name
     void checkIdent(IToken t, String expectedName){
-        assertEquals(Kind.IDENT, t.getKind());
+        assertEquals(IToken.Kind.IDENT, t.getKind());
         assertEquals(expectedName, t.getText());
     }
 
@@ -52,7 +46,7 @@ public class LexerTests {
 
     //check that this token is an INT_LIT with expected int value
     void checkInt(IToken t, int expectedValue) {
-        assertEquals(Kind.INT_LIT, t.getKind());
+        assertEquals(IToken.Kind.INT_LIT, t.getKind());
         assertEquals(expectedValue, t.getIntValue());
     }
 
@@ -64,7 +58,7 @@ public class LexerTests {
 
     //check that this token is the EOF token
     void checkEOF(IToken t) {
-        checkToken(t, Kind.EOF);
+        checkToken(t, IToken.Kind.EOF);
     }
 
 
@@ -86,8 +80,8 @@ public class LexerTests {
 				""";
         show(input);
         ILexer lexer = getLexer(input);
-        checkToken(lexer.next(), Kind.PLUS, 0,0);
-        checkToken(lexer.next(), Kind.MINUS, 1,0);
+        checkToken(lexer.next(), IToken.Kind.PLUS, 0,0);
+        checkToken(lexer.next(), IToken.Kind.MINUS, 1,0);
         checkEOF(lexer.next());
     }
 
@@ -102,8 +96,8 @@ public class LexerTests {
 				""";
         show(input);
         ILexer lexer = getLexer(input);
-        checkToken(lexer.next(), Kind.STRING_LIT, 0,0);
-        checkToken(lexer.next(), Kind.TIMES, 2,0);
+        checkToken(lexer.next(), IToken.Kind.STRING_LIT, 0,0);
+        checkToken(lexer.next(), IToken.Kind.TIMES, 2,0);
         checkEOF(lexer.next());
     }
 
@@ -151,10 +145,10 @@ public class LexerTests {
 				""";
         show(input);
         ILexer lexer = getLexer(input);
-        checkToken(lexer.next(),Kind.ASSIGN,0,0);
-        checkToken(lexer.next(),Kind.EQUALS,0,2);
-        checkToken(lexer.next(),Kind.EQUALS,0,5);
-        checkToken(lexer.next(),Kind.ASSIGN,0,7);
+        checkToken(lexer.next(),IToken.Kind.ASSIGN,0,0);
+        checkToken(lexer.next(),IToken.Kind.EQUALS,0,2);
+        checkToken(lexer.next(),IToken.Kind.EQUALS,0,5);
+        checkToken(lexer.next(),IToken.Kind.ASSIGN,0,7);
         checkEOF(lexer.next());
     }
 
