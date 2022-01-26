@@ -14,6 +14,8 @@ public class Token implements IToken {
         this.length = _length;
     }
 
+
+
     Map<String, Kind> reservedMap = new HashMap<>();
 
     // Inserting reserved words into map
@@ -99,9 +101,9 @@ public class Token implements IToken {
     public boolean getBooleanValue() {
         String substring = input.substring(pos, pos + length);
         if (kind == Kind.BOOLEAN_LIT) {
-            if (substring == "true") {
+            if (substring.equals("true")) {
                 return true;
-            } else if (substring == "false") {
+            } else if (substring.equals("false")) {
                 return false;
             }
         } else {
@@ -115,7 +117,7 @@ public class Token implements IToken {
     //The delimiters should be removed and escape sequences replaced by the characters they represent.
     //TODO: set it up so the escape sequences are represented correctly
     public String getStringValue() {
-        String subString = input.substring(pos, pos + length);
+        StringBuilder subString = new StringBuilder(input.substring(pos, pos + length));
         String outPut = "";
         if(kind == Kind.STRING_LIT){
             for(int i = 0; i < input.length(); i++){
@@ -123,19 +125,19 @@ public class Token implements IToken {
                     i++;
                 }
                 if(input.charAt(i) == '\n'){
-                    subString += "\n" ;
+                    subString.append("\n");
                 }
                 if(input.charAt(i) == '\t'){
-                    subString += "\t";
+                    subString.append("\t");
                 }
                 if(input.charAt(i) == '\b'){
-                    subString += "\b";
+                    subString.append("\b");
                 }
                 if(input.charAt(i) == '\f'){
-                    subString += "\f";
+                    subString.append("\f");
                 }
                 if(input.charAt(i) == '\r'){
-                    subString += "\r";
+                    subString.append("\r");
                 }
             }
         }
