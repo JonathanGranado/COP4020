@@ -1,4 +1,5 @@
 package edu.ufl.cise.plc;
+import java.lang.reflect.Array;
 import java.util.*;
 public class Token implements IToken {
 
@@ -6,12 +7,14 @@ public class Token implements IToken {
     final String input;
     final int pos;
     final int length;
+    public ArrayList<Token> holdingTokens;
 
     public Token(Kind _kind,String _input, int _pos, int _length){
         this.kind = _kind;
         this.input = _input;
         this.pos = _pos;
         this.length = _length;
+        holdingTokens = new ArrayList<>();
     }
 
 
@@ -64,7 +67,7 @@ public class Token implements IToken {
     }
     @Override
     public Kind getKind() {
-        return Kind.EOF;
+        return kind;
     }
 
     @Override
@@ -143,4 +146,8 @@ public class Token implements IToken {
         }
         return null;
     }
+    public ArrayList<Token> getHoldingTokens(){
+        return holdingTokens;
+    }
 }
+
