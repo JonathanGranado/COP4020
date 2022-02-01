@@ -9,7 +9,7 @@ import edu.ufl.cise.plc.*;
 
 public class LexerTests {
 
-    ILexer getLexer(String input){
+    ILexer getLexer(String input) throws LexicalException {
         return CompilerComponentFactory.getLexer(input);
     }
 
@@ -30,6 +30,7 @@ public class LexerTests {
     void checkToken(IToken t, IToken.Kind expectedKind, int expectedLine, int expectedColumn){
         assertEquals(expectedKind, t.getKind());
         assertEquals(new IToken.SourceLocation(expectedLine,expectedColumn), t.getSourceLocation());
+        System.out.println("SUCCESS");
     }
 
     //check that this token is an IDENT and has the expected name
@@ -76,12 +77,13 @@ public class LexerTests {
     void testSingleChar0() throws LexicalException {
         String input = """
 				+ 
-				- 	 
+				+ 	 
 				""";
         show(input);
         ILexer lexer = getLexer(input);
+
         checkToken(lexer.next(), IToken.Kind.PLUS, 0,0);
-        checkToken(lexer.next(), IToken.Kind.MINUS, 1,0);
+        checkToken(lexer.next(), IToken.Kind.PLUS, 1,0);
         checkEOF(lexer.next());
     }
 
