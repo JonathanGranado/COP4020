@@ -39,6 +39,10 @@ public class Token implements IToken {
         reservedMap.put("getWidth", Kind.IMAGE_OP);
         reservedMap.put("getHeight", Kind.IMAGE_OP);
         // <color_op>
+        reservedMap.put("getRed", Kind.COLOR_OP);
+        reservedMap.put("getBlue", Kind.COLOR_OP);
+        reservedMap.put("getGreen", Kind.COLOR_OP);
+        // <color_const>
         reservedMap.put("BLACK", Kind.COLOR_CONST);
         reservedMap.put("BLUE", Kind.COLOR_CONST);
         reservedMap.put("CYAN", Kind.COLOR_CONST);
