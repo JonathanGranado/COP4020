@@ -56,7 +56,7 @@ public class LexerTests {
         assertEquals(new IToken.SourceLocation(expectedLine,expectedColumn), t.getSourceLocation());
     }
 
-    void checkFloat(IToken t, double expectedValue){
+    void checkFloat(IToken t, float expectedValue){
         assertEquals(IToken.Kind.FLOAT_LIT, t.getKind());
         assertEquals(expectedValue, t.getFloatValue());
     }
@@ -81,13 +81,13 @@ public class LexerTests {
     void testSingleChar0() throws LexicalException {
         String input = """
 				+ 
-				+ 	 
+				- 	 
 				""";
 
         show(input);
         ILexer lexer = getLexer(input);
         checkToken(lexer.next(), IToken.Kind.PLUS, 0,0);
-        checkToken(lexer.next(), IToken.Kind.PLUS, 1,0);
+        checkToken(lexer.next(), IToken.Kind.MINUS, 1,0);
         checkEOF(lexer.next());
     }
 
@@ -189,10 +189,10 @@ public class LexerTests {
     @Test
     public void testFloatLit() throws LexicalException {
         String input = """
-	3.45
+	3.4500000000000000
 				""";
         ILexer lexer = getLexer(input);
-        checkFloat(lexer.next(), 3.45);
+        checkFloat(lexer.next(), 3.45f);
         }
 
     @Test
@@ -203,5 +203,21 @@ public class LexerTests {
         ILexer lexer = getLexer(input);
         checkInt(lexer.next(), 0);
     }
+    @Test
+    public void testIdenIntWthMultipleLines() throws LexicalException {
+        String input = """
+				a123 456
+				  a123 def
+				""";
+        show(input);
+        ILexer lexer = getLexer(input);
+        checkIdent(lexer.next(), "a123", 0,0);
+        checkInt(lexer.next(), 456, 0,5);
+        checkIdent(lexer.next(), "a123", 1,2);
+        checkIdent(lexer.next(), "def", 1, 7);
+        checkEOF(lexer.next());
     }
+
+    // reserved test
+}
 
