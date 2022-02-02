@@ -2,6 +2,7 @@ package edu.ufl.cise.plc;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.ListIterator;
 
 enum State {
     START,
@@ -24,10 +25,12 @@ public class Lexer implements ILexer {
     public ArrayList<IToken> holdingTokens = new ArrayList<>();
     char[] chars;
     State state = State.START;
-    Iterator<IToken> iter;
+    int arrayPos = 0;
+    ListIterator<IToken> iter = holdingTokens.listIterator();
+
     public Lexer(String input) throws LexicalException {
 
-        var iter = holdingTokens.iterator();
+        Iterator<IToken> iter = holdingTokens.iterator();
 
         if (input.isEmpty()) {
             chars = new char[1];
@@ -54,19 +57,20 @@ public class Lexer implements ILexer {
                         // single characters, and white space characters, just missing the commment
 
                         switch (ch) {
-                            case ' ', '\t' -> {
+                            case ' ', '\t', '\r' -> {
                                 pos++;
                                 startPos++;
                             }
-                            case '\n'-> {
+                            case '\n' -> {
                                 pos++;
                                 lineNumber++;
                                 startPos = 0;
                             }
-                            /*case '\r' -> {
+                            case '"' -> {
+                                holdingTokens.add(new Token(IToken.Kind.STRING_LIT, "\"", startPos, 1, lineNumber));
                                 pos++;
-                                lineNumber++;
-                            }*/
+                                startPos++;
+                            }
                             case '&' -> {
                                 holdingTokens.add(new Token(IToken.Kind.AND, "&", startPos, 1, lineNumber));
                                 pos++;
@@ -229,14 +233,15 @@ public class Lexer implements ILexer {
     @Override
     public IToken next() throws LexicalException {
 
-        IToken nextToken = holdingTokens.iterator().next();
-
-        return nextToken;
+        IToken result = holdingTokens.get(arrayPos);
+        arrayPos++;
+        return result;
     }
 
     @Override
     public IToken peek() throws LexicalException {
-        return null;
+        IToken result = holdingTokens.get(arrayPos);
+        return result;
     }
 
 }

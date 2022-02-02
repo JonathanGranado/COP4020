@@ -81,7 +81,6 @@ public class LexerTests {
 				""";
         show(input);
         ILexer lexer = getLexer(input);
-
         checkToken(lexer.next(), IToken.Kind.PLUS, 0,0);
         checkToken(lexer.next(), IToken.Kind.PLUS, 1,0);
         checkEOF(lexer.next());
