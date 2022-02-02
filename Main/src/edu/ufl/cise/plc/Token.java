@@ -6,15 +6,17 @@ public class Token implements IToken {
     final Kind kind;
     final String input;
     final int pos;
+    final int lineNumber;
     final int length;
-    public ArrayList<Token> holdingTokens;
+    SourceLocation srcLocation;
 
-    public Token(Kind _kind,String _input, int _pos, int _length){
+    public Token(Kind _kind,String _input, int _pos, int _length, int _lineNumber){
         this.kind = _kind;
         this.input = _input;
         this.pos = _pos;
         this.length = _length;
-        holdingTokens = new ArrayList<>();
+        this.lineNumber = _lineNumber;
+        this.srcLocation = new SourceLocation(_lineNumber, _pos);
     }
 
 
@@ -77,7 +79,8 @@ public class Token implements IToken {
 
     @Override
     public SourceLocation getSourceLocation() {
-        return null;
+
+        return this.srcLocation;
     }
 
     @Override
@@ -146,8 +149,6 @@ public class Token implements IToken {
         }
         return null;
     }
-    public ArrayList<Token> getHoldingTokens(){
-        return holdingTokens;
-    }
+
 }
 
