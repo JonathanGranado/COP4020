@@ -17,6 +17,7 @@ public class Token implements IToken {
         this.length = _length;
         this.lineNumber = _lineNumber;
         this.srcLocation = new SourceLocation(_lineNumber, _pos);
+
     }
 
 
@@ -74,7 +75,10 @@ public class Token implements IToken {
 
     @Override
     public String getText() {
-        return input.substring(pos, pos + length);
+        System.out.println("pos is " + pos + " length is " + length + " length of input " + input.length());
+        String text = input.substring(0, length);
+        System.out.println(text);
+        return text;
     }
 
     @Override

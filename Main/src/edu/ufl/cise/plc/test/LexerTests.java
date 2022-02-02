@@ -30,7 +30,6 @@ public class LexerTests {
     void checkToken(IToken t, IToken.Kind expectedKind, int expectedLine, int expectedColumn){
         assertEquals(expectedKind, t.getKind());
         assertEquals(new IToken.SourceLocation(expectedLine,expectedColumn), t.getSourceLocation());
-        System.out.println("SUCCESS");
     }
 
     //check that this token is an IDENT and has the expected name
@@ -57,6 +56,11 @@ public class LexerTests {
         assertEquals(new IToken.SourceLocation(expectedLine,expectedColumn), t.getSourceLocation());
     }
 
+    void checkFloat(IToken t, double expectedValue){
+        assertEquals(IToken.Kind.FLOAT_LIT, t.getKind());
+        assertEquals(expectedValue, t.getFloatValue());
+    }
+
     //check that this token is the EOF token
     void checkEOF(IToken t) {
         checkToken(t, IToken.Kind.EOF);
@@ -79,6 +83,7 @@ public class LexerTests {
 				+ 
 				+ 	 
 				""";
+
         show(input);
         ILexer lexer = getLexer(input);
         checkToken(lexer.next(), IToken.Kind.PLUS, 0,0);
@@ -181,4 +186,22 @@ public class LexerTests {
         });
     }
 
-}
+    @Test
+    public void testFloatLit() throws LexicalException {
+        String input = """
+	3.45
+				""";
+        ILexer lexer = getLexer(input);
+        checkFloat(lexer.next(), 3.45);
+        }
+
+    @Test
+    public void testSingleZero() throws LexicalException {
+        String input = """
+    0
+				""";
+        ILexer lexer = getLexer(input);
+        checkInt(lexer.next(), 0);
+    }
+    }
+
