@@ -54,22 +54,25 @@ public class Lexer implements ILexer {
         int pos = 0;
         int lineNumber = 0;
         int startPos = 0;
+        int lineBasePos = 0;
         loop:
         while (true) {
             char ch = chars[pos];
             if (state != null) {
+                System.out.println("Pos: " + pos);
                 switch (state) {
                     case START -> {
                         switch (ch) {
                             // implement comment
                             case ' ', '\t', '\r' -> {
                                 pos++;
-                             //   startPos = pos;
                             }
                             case '\n' -> {
                                 pos++;
                                 lineNumber++;
                                 startPos = pos;
+                                lineBasePos = pos;
+                                System.out.println("startPos recalculated to " + startPos + " by assigning due to newline");
                             }
                             case '"' -> {
                                 state = State.HAVE_QUOTE;
@@ -186,6 +189,8 @@ public class Lexer implements ILexer {
                             case '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
                                 holdingToken += ch;
                                 startPos = pos;
+                                // TODO: add if statement like in default
+                                System.out.println("startPos recalculated to " + startPos + " by assigning in num start");
                                 pos++;
                                 state = State.IN_NUM;
                             }
@@ -198,8 +203,10 @@ public class Lexer implements ILexer {
                                     holdingToken += ch;
                                     if(lineNumber > 0) {
                                         startPos = pos - startPos;
+                                        System.out.println("startPos recalculated to " + startPos + " by subtracting in iden start");
                                     }else {
                                         startPos = pos; // passes IDenINT
+                                        System.out.println("startPos recalculated to " + startPos + " by assigning in iden start");
                                     }
                                     pos++;
                                     state = State.IN_IDENT;
@@ -395,6 +402,8 @@ public class Lexer implements ILexer {
                                 state = State.HAVE_DOT;
                             }
                             default -> {
+                                System.out.println("Creating new  token\n"+holdingToken+" Start = "+ startPos + " Pos = " + pos);
+
                                 holdingTokens.add(new Token(IToken.Kind.INT_LIT, holdingToken, startPos, holdingToken.length(), lineNumber));
                                 try {
                                     Integer.parseInt(holdingToken);
@@ -413,11 +422,19 @@ public class Lexer implements ILexer {
                                 pos++;
                             }else{
                                 holdingTokens.add(new Token(IToken.Kind.IDENT, holdingToken, startPos, holdingToken.length(), lineNumber));
-                                startPos = pos;
+                                System.out.println("Creating new  token\n"+holdingToken+" Start = "+ startPos + " Pos = " + pos);
+                                if(lineNumber >0){
+                                    startPos = lineBasePos;
+                                } else{
+                                    startPos = pos - startPos;
+                                    System.out.println("startPos recalculated to " + startPos + " by substracting");
+                                }
+
                                 holdingToken = "";
                                 state = State.START;
                             }
                     }
+
                     // in float after int lit -> have dot and then has a digit
                     case IN_FLOAT -> {
                         switch (ch){
