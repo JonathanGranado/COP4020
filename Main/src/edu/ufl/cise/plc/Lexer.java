@@ -180,8 +180,8 @@ public class Lexer implements ILexer {
                             }
                             case '=' -> {
                                 state = State.HAVE_EQ;
-                                startPos = pos;
                                 pos++;
+                                startPos = pos;
                                 holdingToken += ch;
                             }
                             case '-' -> {
@@ -291,6 +291,7 @@ public class Lexer implements ILexer {
                     }
                     // if the next character is not another = it is an error
                     case HAVE_EQ -> {
+                        startPos = pos - startPos;
                         switch (ch) {
                             case '=' -> {
                                 holdingToken += ch;
@@ -300,7 +301,9 @@ public class Lexer implements ILexer {
                                 state = State.START;
                             }
                             default -> {
+
                                 holdingTokens.add(new Token(IToken.Kind.ASSIGN, holdingToken, startPos, 1, lineNumber));
+                                holdingToken = "";
                                 state = State.START;
                             }
                         }
@@ -341,23 +344,25 @@ public class Lexer implements ILexer {
 
                     // can have ->, or just -
                     case HAVE_MINUS -> {
+                        startPos = pos - startPos;
                         switch (ch) {
                             case '>' -> {
                                 holdingToken += ch;
                                 pos++;
-                                holdingTokens.add(new Token(IToken.Kind.RARROW, holdingToken, startPos, 1, lineNumber));
+                                holdingTokens.add(new Token(IToken.Kind.RARROW, holdingToken, startPos, 2, lineNumber));
+                                holdingToken = "";
                                 state = State.START;
                             }
                             default -> {
-                                startPos = pos - startPos;
-                                pos++;
                                 holdingTokens.add(new Token(IToken.Kind.MINUS, holdingToken, startPos, 1, lineNumber));
+                                holdingToken = "";
                                 state = State.START;
                             }
                         }
                     }
                     // can have <, or <-, or <=
                     case HAVE_LT -> {
+                        startPos = pos - startPos;
                         switch (ch) {
                             case '-' -> {
                                 holdingToken += ch;
@@ -378,7 +383,6 @@ public class Lexer implements ILexer {
                                 state = State.START;
                             }
                             default -> {
-                                pos++;
                                 holdingTokens.add(new Token(IToken.Kind.LT, holdingToken, startPos, 1, lineNumber));
                                 state = State.START;
                             }
@@ -387,6 +391,7 @@ public class Lexer implements ILexer {
                     }
                     // can have >, or >>, or >=
                     case HAVE_GT -> {
+                        startPos = pos - startPos;
                         switch (ch) {
                             case '>' -> {
                                 holdingToken += ch;
@@ -401,7 +406,6 @@ public class Lexer implements ILexer {
                                 state = State.START;
                             }
                             default -> {
-                                pos++;
                                 holdingTokens.add(new Token(IToken.Kind.GT, holdingToken, startPos, 1, lineNumber));
                                 state = State.START;
                             }
@@ -409,16 +413,18 @@ public class Lexer implements ILexer {
                     }
                     // can just have !, or !=
                     case HAVE_BANG -> {
+                        startPos = pos - startPos;
                         switch (ch) {
                             case '=' -> {
                                 holdingToken += ch;
+                                holdingTokens.add(new Token(IToken.Kind.NOT_EQUALS, holdingToken, startPos, 2, lineNumber));
                                 pos++;
-                                holdingTokens.add(new Token(IToken.Kind.NOT_EQUALS, holdingToken, startPos, 1, lineNumber));
+                                holdingToken = "";
                                 state = State.START;
                             }
                             default -> {
-                                pos++;
                                 holdingTokens.add(new Token(IToken.Kind.BANG, holdingToken, startPos, 1, lineNumber));
+                                holdingToken = "";
                                 state = State.START;
                             }
                         }
