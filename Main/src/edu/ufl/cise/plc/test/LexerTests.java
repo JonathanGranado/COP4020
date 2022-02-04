@@ -6,6 +6,8 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import org.junit.jupiter.api.Test;
 import edu.ufl.cise.plc.*;
 
+import java.util.Arrays;
+
 
 public class LexerTests {
 
@@ -29,6 +31,12 @@ public class LexerTests {
     //check that the token has the expected kind and position
     void checkToken(IToken t, IToken.Kind expectedKind, int expectedLine, int expectedColumn){
         assertEquals(expectedKind, t.getKind());
+        assertEquals(new IToken.SourceLocation(expectedLine,expectedColumn), t.getSourceLocation());
+    }
+    //check that the token has the expected kind and position and text
+    void checkToken(IToken t, IToken.Kind expectedKind, int expectedLine, int expectedColumn, String expectedText){
+        assertEquals(expectedKind, t.getKind());
+        assertEquals(expectedText, t.getText());
         assertEquals(new IToken.SourceLocation(expectedLine,expectedColumn), t.getSourceLocation());
     }
 
@@ -65,8 +73,6 @@ public class LexerTests {
     void checkEOF(IToken t) {
         checkToken(t, IToken.Kind.EOF);
     }
-
-
     //The lexer should add an EOF token to the end.
     @Test
     void testEmpty() throws LexicalException {
@@ -203,6 +209,7 @@ public class LexerTests {
         ILexer lexer = getLexer(input);
         checkInt(lexer.next(), 0);
     }
+
     @Test
     public void testIdenIntWthMultipleLines() throws LexicalException {
         String input = """
@@ -218,6 +225,143 @@ public class LexerTests {
         checkEOF(lexer.next());
     }
 
-    // reserved test
+    @Test
+    void testReservedWords() throws LexicalException {
+        String input = """
+			string CYAN
+			int
+			float
+			boolean
+			color
+			image
+			void
+			getWidth
+			getHeight
+			getRed
+			getGreen
+			getBlue
+			BLACK
+			BLUE
+			CYAN
+			DARK_GRAY
+			GRAY
+			GREEN
+			LIGHT_GRAY
+			MAGENTA
+			ORANGE
+			PINK
+			RED
+			WHITE
+			YELLOW
+			true
+			false
+			if
+			else
+			fi
+			write
+			console	 
+			""";
+        show(input);
+        ILexer lexer = getLexer(input);
+        checkToken(lexer.next(), IToken.Kind.TYPE,		    0, 0, "string");
+        checkToken(lexer.next(), IToken.Kind.COLOR_CONST,    0, 7, "CYAN");
+        checkToken(lexer.next(), IToken.Kind.TYPE,		    1, 0, "int");
+        checkToken(lexer.next(), IToken.Kind.TYPE,		    2, 0, "float");
+        checkToken(lexer.next(), IToken.Kind.TYPE,		    3, 0, "boolean");
+        checkToken(lexer.next(), IToken.Kind.TYPE,		    4, 0, "color");
+        checkToken(lexer.next(), IToken.Kind.TYPE,		    5, 0, "image");
+        checkToken(lexer.next(), IToken.Kind.KW_VOID,	    6, 0, "void");
+        checkToken(lexer.next(), IToken.Kind.IMAGE_OP,	    7, 0, "getWidth");
+        checkToken(lexer.next(), IToken.Kind.IMAGE_OP,	    8, 0, "getHeight");
+        checkToken(lexer.next(), IToken.Kind.COLOR_OP,	    9, 0, "getRed");
+        checkToken(lexer.next(), IToken.Kind.COLOR_OP,	    10, 0, "getGreen");
+        checkToken(lexer.next(), IToken.Kind.COLOR_OP,	    11, 0, "getBlue");
+        checkToken(lexer.next(), IToken.Kind.COLOR_CONST,	12, 0, "BLACK");
+        checkToken(lexer.next(), IToken.Kind.COLOR_CONST,	13, 0, "BLUE");
+        checkToken(lexer.next(), IToken.Kind.COLOR_CONST,	14, 0, "CYAN");
+        checkToken(lexer.next(), IToken.Kind.COLOR_CONST,	15, 0, "DARK_GRAY");
+        checkToken(lexer.next(), IToken.Kind.COLOR_CONST,	16, 0, "GRAY");
+        checkToken(lexer.next(), IToken.Kind.COLOR_CONST,	17, 0, "GREEN");
+        checkToken(lexer.next(), IToken.Kind.COLOR_CONST,	18, 0, "LIGHT_GRAY");
+        checkToken(lexer.next(), IToken.Kind.COLOR_CONST,	19, 0, "MAGENTA");
+        checkToken(lexer.next(), IToken.Kind.COLOR_CONST,	20, 0, "ORANGE");
+        checkToken(lexer.next(), IToken.Kind.COLOR_CONST,	21, 0, "PINK");
+        checkToken(lexer.next(), IToken.Kind.COLOR_CONST,	22, 0, "RED");
+        checkToken(lexer.next(), IToken.Kind.COLOR_CONST,	23, 0, "WHITE");
+        checkToken(lexer.next(), IToken.Kind.COLOR_CONST,	24, 0, "YELLOW");
+        checkToken(lexer.next(), IToken.Kind.BOOLEAN_LIT,	25, 0, "true");
+        checkToken(lexer.next(), IToken.Kind.BOOLEAN_LIT,	26, 0, "false");
+        checkToken(lexer.next(), IToken.Kind.KW_IF,        27, 0, "if");
+        checkToken(lexer.next(), IToken.Kind.KW_ELSE,	    28, 0, "else");
+        checkToken(lexer.next(), IToken.Kind.KW_FI,	    29, 0, "fi");
+        checkToken(lexer.next(), IToken.Kind.KW_WRITE,	    30, 0, "write");
+        checkToken(lexer.next(), IToken.Kind.KW_CONSOLE,	31, 0, "console");
+        checkEOF(lexer.next());
+    }
+    //@TODO see why this is giving wrong column number, looks like it stops working for those that have more than one character
+    @Test
+    void testAllSymbolTokens() throws LexicalException {
+        String input = """
+			&
+			|
+			/
+			*
+			+
+			(
+			)
+			[
+			]
+			!=
+			==
+			>=
+			<=
+			>>
+			<<
+			<-
+			->
+			%
+			^
+			,
+			;
+			!
+			=
+			-
+			<
+			>	 
+			""";
+        show(input);
+        ILexer lexer = getLexer(input);
+        checkToken(lexer.next(), IToken.Kind.AND,		0, 0);
+        checkToken(lexer.next(), IToken.Kind.OR,		1, 0);
+        checkToken(lexer.next(), IToken.Kind.DIV,		2, 0);
+        checkToken(lexer.next(), IToken.Kind.TIMES,	3, 0);
+        checkToken(lexer.next(), IToken.Kind.PLUS,		4, 0);
+        checkToken(lexer.next(), IToken.Kind.LPAREN,	5, 0);
+        checkToken(lexer.next(), IToken.Kind.RPAREN,	6, 0);
+        checkToken(lexer.next(), IToken.Kind.LSQUARE,    7, 0);
+        checkToken(lexer.next(), IToken.Kind.RSQUARE,	8, 0);
+        checkToken(lexer.next(), IToken.Kind.NOT_EQUALS,	9, 0);
+        checkToken(lexer.next(), IToken.Kind.EQUALS,    	10, 0);
+        checkToken(lexer.next(), IToken.Kind.GE,         11, 0);
+        checkToken(lexer.next(), IToken.Kind.LE,         12, 0);
+        checkToken(lexer.next(), IToken.Kind.RANGLE,     13, 0);
+        checkToken(lexer.next(), IToken.Kind.LANGLE,     14, 0);
+        checkToken(lexer.next(), IToken.Kind.LARROW,     15, 0);
+        checkToken(lexer.next(), IToken.Kind.RARROW,     16, 0);
+        checkToken(lexer.next(), IToken.Kind.MOD,        17, 0);
+        checkToken(lexer.next(), IToken.Kind.RETURN,     18, 0);
+        checkToken(lexer.next(), IToken.Kind.COMMA,      19, 0);
+        checkToken(lexer.next(), IToken.Kind.SEMI,       20, 0);
+        checkToken(lexer.next(), IToken.Kind.BANG,       21, 0);
+        checkToken(lexer.next(), IToken.Kind.ASSIGN,     22, 0);
+        checkToken(lexer.next(), IToken.Kind.MINUS,      23, 0);
+        checkToken(lexer.next(), IToken.Kind.LT,		24, 0);
+        checkToken(lexer.next(), IToken.Kind.GT,		25, 0);
+        checkEOF(lexer.next());
+    }
+
+
+
+
 }
 
