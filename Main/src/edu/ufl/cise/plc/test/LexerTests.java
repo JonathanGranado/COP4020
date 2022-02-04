@@ -327,7 +327,7 @@ public class LexerTests {
 			=
 			-
 			<
-			>	 
+			>
 			""";
         show(input);
         ILexer lexer = getLexer(input);
@@ -360,8 +360,49 @@ public class LexerTests {
         checkEOF(lexer.next());
     }
 
+    String getASCII(String s) {
+        int[] ascii = new int[s.length()];
+        for (int i = 0; i != s.length(); i++) {
+            ascii[i] = s.charAt(i);
+        }
+        return Arrays.toString(ascii);
+    }
 
+    @Test
+    public void testEscapeSequences0() throws LexicalException {
+        String input = "\"\\b \\t \\n \\f \\r \"";
+        show(input);
+        show("input chars= " + getASCII(input));
+        ILexer lexer = getLexer(input);
+        IToken t = lexer.next();
+        String val = t.getStringValue();
+        show("getStringValueChars= 	" + getASCII(val));
+        String expectedStringValue = "\b \t \n \f \r ";
+        show("expectedStringValueChars=" + getASCII(expectedStringValue));
+        assertEquals(expectedStringValue, val);
+        String text = t.getText();
+        show("getTextChars= 	" +getASCII(text));
+        String expectedText = "\"\\b \\t \\n \\f \\r \"";
+        show("expectedTextChars="+getASCII(expectedText));
+        assertEquals(expectedText,text);
+    }
 
-
+    @Test
+    public void testEscapeSequences1() throws LexicalException {
+        String input = "   \" ...  \\\"  \\\'  \\\\  \"";
+        show(input);
+        show("input chars= " + getASCII(input));
+        ILexer lexer = getLexer(input);
+        IToken t = lexer.next();
+        String val = t.getStringValue();
+        show("getStringValueChars= 	" + getASCII(val));
+        String expectedStringValue = " ...  \"  \'  \\  ";
+        show("expectedStringValueChars=" + getASCII(expectedStringValue));
+        assertEquals(expectedStringValue, val);
+        String text = t.getText();
+        show("getTextChars= 	" +getASCII(text));
+        String expectedText = "\" ...  \\\"  \\\'  \\\\  \""; //almost the same as input, but white space is omitted
+        show("expectedTextChars="+getASCII(expectedText));
+        assertEquals(expectedText,text);
+    }
 }
-

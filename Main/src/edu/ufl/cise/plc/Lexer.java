@@ -38,7 +38,6 @@ public class Lexer implements ILexer {
             chars = new char[1];
             chars[0] = '~';
         } else {
- //           chars = input.toCharArray();
             chars = new char[input.length() + 1];
             for (int i = 0; i < input.length(); i++) {
                 chars[i] = input.charAt(i);
@@ -100,9 +99,10 @@ public class Lexer implements ILexer {
                                 lineBasePos = pos;
                             }
                             case '"' -> {
-                                state = State.HAVE_QUOTE;
+                                holdingToken += ch;
                                 startPos = pos;
                                 pos++;
+                                state = State.HAVE_QUOTE;
                             }
                             case '&' -> {
                                 startPos = pos - startPos;
@@ -143,7 +143,6 @@ public class Lexer implements ILexer {
                                 startPos = pos - startPos;
                                 holdingTokens.add(new Token(IToken.Kind.PLUS, "+", startPos, 1, lineNumber));
                                 pos++;
-                                //  startPos++;
                             }
                             case '^' -> {
                                 startPos = pos - startPos;
@@ -171,38 +170,38 @@ public class Lexer implements ILexer {
                                 pos++;
                             }
                             case '#' -> {
-                                state = State.IN_COMMENT;
                                 pos++;
+                                state = State.IN_COMMENT;
                             }
                             case '=' -> {
-                                state = State.HAVE_EQ;
                                 startPos = pos;
                                 pos++;
                                 holdingToken += ch;
+                                state = State.HAVE_EQ;
                             }
                             case '-' -> {
-                                state = State.HAVE_MINUS;
                                 pos++;
                                 startPos = pos;
                                 holdingToken += ch;
+                                state = State.HAVE_MINUS;
                             }
                             case '<' -> {
-                                state = State.HAVE_LT;
                                 pos++;
                                 startPos = pos;
                                 holdingToken += ch;
+                                state = State.HAVE_LT;
                             }
                             case '>' -> {
-                                state = State.HAVE_GT;
                                 pos++;
                                 startPos = pos;
                                 holdingToken += ch;
+                                state = State.HAVE_GT;
                             }
                             case '!' -> {
-                                state = State.HAVE_BANG;
                                 pos++;
                                 startPos = pos;
                                 holdingToken += ch;
+                                state = State.HAVE_BANG;
                             }
                             case '0' -> {
                                 holdingToken += ch;
@@ -270,9 +269,6 @@ public class Lexer implements ILexer {
                             }
                         }
                     }
-
-                    // 0
-                    // check if it has case of digit, if not throw lexicalException
                     case HAVE_DOT -> {
                         switch (ch) {
                             case '0', '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
@@ -283,7 +279,6 @@ public class Lexer implements ILexer {
                             default -> throw new LexicalException("Incorrect Token Sequence");
                         }
                     }
-                    // if the next character is not another = it is an error
                     case HAVE_EQ -> {
                         switch (ch) {
                             case '=' -> {
@@ -299,7 +294,6 @@ public class Lexer implements ILexer {
                             }
                         }
                     }
-                    // start of string lit
                     case HAVE_QUOTE -> {
                         switch (ch) {
                             case '\'' -> {
@@ -321,7 +315,6 @@ public class Lexer implements ILexer {
                             }
                         }
                     }
-
                     case IN_STRING -> {
                         switch (ch) {
                             case 'b', 't', 'n', 'f', 'r', '"', '\\', '\'' -> {
@@ -332,8 +325,6 @@ public class Lexer implements ILexer {
                             default -> throw new LexicalException("Incorrect Token Sequence");
                         }
                     }
-
-                    // can have ->, or just -
                     case HAVE_MINUS -> {
                         switch (ch) {
                             case '>' -> {
@@ -350,7 +341,6 @@ public class Lexer implements ILexer {
                             }
                         }
                     }
-                    // can have <, or <-, or <=
                     case HAVE_LT -> {
                         switch (ch) {
                             case '-' -> {
@@ -379,19 +369,20 @@ public class Lexer implements ILexer {
                         }
 
                     }
-                    // can have >, or >>, or >=
                     case HAVE_GT -> {
                         switch (ch) {
                             case '>' -> {
                                 holdingToken += ch;
                                 pos++;
                                 holdingTokens.add(new Token(IToken.Kind.RANGLE, holdingToken, startPos, 1, lineNumber));
+                                holdingToken = "";
                                 state = State.START;
                             }
                             case '=' -> {
                                 holdingToken += ch;
                                 pos++;
                                 holdingTokens.add(new Token(IToken.Kind.GE, holdingToken, startPos, 1, lineNumber));
+                                holdingToken = "";
                                 state = State.START;
                             }
                             default -> {
@@ -401,18 +392,24 @@ public class Lexer implements ILexer {
                             }
                         }
                     }
-                    // can just have !, or !=
                     case HAVE_BANG -> {
                         switch (ch) {
                             case '=' -> {
                                 holdingToken += ch;
                                 pos++;
+                                if (lineNumber > 0) {
+                                    startPos = lineBasePos;
+                                } else {
+                                    startPos = pos - startPos;
+                                }
                                 holdingTokens.add(new Token(IToken.Kind.NOT_EQUALS, holdingToken, startPos, 1, lineNumber));
+                                holdingToken ="";
                                 state = State.START;
                             }
                             default -> {
                                 pos++;
                                 holdingTokens.add(new Token(IToken.Kind.BANG, holdingToken, startPos, 1, lineNumber));
+                                holdingToken = "";
                                 state = State.START;
                             }
                         }
@@ -440,7 +437,6 @@ public class Lexer implements ILexer {
                             }
                         }
                     }
-                    // if it has letter, $, or _, then stays (by increasing pos++) if it also has 0..9
                     case IN_IDENT -> {
                         if (Character.isJavaIdentifierPart(ch)) {
                             holdingToken += ch;
