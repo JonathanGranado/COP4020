@@ -1,5 +1,4 @@
 package edu.ufl.cise.plc;
-import java.lang.reflect.Array;
 import java.util.*;
 public class Token implements IToken {
 
@@ -9,6 +8,8 @@ public class Token implements IToken {
     final int lineNumber;
     final int length;
     SourceLocation srcLocation;
+    Map<String, Kind> reservedMap = new HashMap<>();
+
 
     public Token(Kind _kind,String _input, int _pos, int _length, int _lineNumber){
         this.kind = _kind;
@@ -19,12 +20,6 @@ public class Token implements IToken {
         this.srcLocation = new SourceLocation(_lineNumber, _pos);
 
     }
-
-
-
-    Map<String, Kind> reservedMap = new HashMap<>();
-
-    // Inserting reserved words into map
 
     public Map<String, Kind> getReservedMap() {
         // <type>
@@ -79,9 +74,7 @@ public class Token implements IToken {
 
     @Override
     public String getText() {
-        String text = input.substring(0, length);
-        System.out.println(text);
-        return text;
+        return input.substring(0, length);
     }
 
     @Override
@@ -105,7 +98,7 @@ public class Token implements IToken {
         if (kind == Kind.FLOAT_LIT) {
             return Float.parseFloat(getText());
         } else {
-            System.out.println("ERROR. Token is not INT_LIT");
+            System.out.println("ERROR. Token is not FLOAT_LIT");
         }
         return -1;
     }
@@ -130,32 +123,31 @@ public class Token implements IToken {
     //The delimiters should be removed and escape sequences replaced by the characters they represent.
     //TODO: set it up so the escape sequences are represented correctly
     public String getStringValue() {
-        StringBuilder subString = new StringBuilder(input.substring(pos, pos + length));
-        String outPut = "";
+        StringBuilder outPut = new StringBuilder();
         if(kind == Kind.STRING_LIT){
             for(int i = 0; i < input.length(); i++){
-                if(input.charAt(i) == ' '){
-                    i++;
+                if(input.charAt(i) == ' ' ){
+                    outPut.append(" ");
                 }
-                if(input.charAt(i) == '\n'){
-                    subString.append("\n");
+                else if(input.charAt(i) == '\n'){
+                    outPut.append("n");
                 }
-                if(input.charAt(i) == '\t'){
-                    subString.append("\t");
+                else if(input.charAt(i) == '\t'){
+                    outPut.append("t");
                 }
-                if(input.charAt(i) == '\b'){
-                    subString.append("\b");
+                else if(input.charAt(i) == '\b'){
+                    outPut.append("b");
                 }
-                if(input.charAt(i) == '\f'){
-                    subString.append("\f");
+                else if(input.charAt(i) == '\f'){
+                    outPut.append("f");
                 }
-                if(input.charAt(i) == '\r'){
-                    subString.append("\r");
+                else if(input.charAt(i) == '\r'){
+                    outPut.append("r");
+                }else{
+                    outPut.append(input.charAt(i));
                 }
             }
         }
-        return null;
+        return outPut.toString();
     }
-
 }
-
