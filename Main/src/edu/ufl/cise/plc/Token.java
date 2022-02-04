@@ -79,7 +79,6 @@ public class Token implements IToken {
 
     @Override
     public String getText() {
-        System.out.println("pos is " + pos + " length is " + length + " length of input " + input.length());
         String text = input.substring(0, length);
         System.out.println(text);
         return text;

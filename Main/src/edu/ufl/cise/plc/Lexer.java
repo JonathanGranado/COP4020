@@ -85,14 +85,18 @@ public class Lexer implements ILexer {
 
 
         int pos = 0, lineNumber = 0, startPos = 0, lineBasePos = 0;
+
         loop:
         while (true) {
             char ch = chars[pos];
             if (state != null) {
+                System.out.println("Pos: " + pos);
                 switch (state) {
                     case START -> {
                         switch (ch) {
+
                             case ' ', '\t', '\r' -> pos++;
+
                             case '\n' -> {
                                 pos++;
                                 lineNumber++;
@@ -213,11 +217,13 @@ public class Lexer implements ILexer {
                             }
                             case '1', '2', '3', '4', '5', '6', '7', '8', '9' -> {
                                 holdingToken += ch;
+                              
                                 if (lineNumber > 0) {
                                     startPos = pos - startPos;
                                 } else {
                                     startPos = pos;
                                 }
+                                // TODO: add if statement like in default
                                 pos++;
                                 state = State.IN_NUM;
                             }
@@ -429,6 +435,8 @@ public class Lexer implements ILexer {
                                 state = State.HAVE_DOT;
                             }
                             default -> {
+                                System.out.println("Creating new  token\n"+holdingToken+" Start = "+ startPos + " Pos = " + pos);
+
                                 holdingTokens.add(new Token(IToken.Kind.INT_LIT, holdingToken, startPos, holdingToken.length(), lineNumber));
                                 try {
                                     Integer.parseInt(holdingToken);
