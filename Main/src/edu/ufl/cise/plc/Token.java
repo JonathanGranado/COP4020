@@ -74,12 +74,11 @@ public class Token implements IToken {
 
     @Override
     public String getText() {
-        return input.substring(0, length);
+        return input.trim();
     }
 
     @Override
     public SourceLocation getSourceLocation() {
-
         return this.srcLocation;
     }
 
@@ -124,26 +123,42 @@ public class Token implements IToken {
     //TODO: set it up so the escape sequences are represented correctly
     public String getStringValue() {
         StringBuilder outPut = new StringBuilder();
+        System.out.println(input);
         if(kind == Kind.STRING_LIT){
-            for(int i = 0; i < input.length(); i++){
-                if(input.charAt(i) == ' ' ){
-                    outPut.append(" ");
+            for(int i = 0; i < input.length()-1; i++){
+                if(input.charAt(i) =='\\'){
+                    if(input.charAt(i+1) == 'n'){
+                        outPut.append("\n");
+                        i++;
+                    }
+                    if(input.charAt(i+1) == 't'){
+                        outPut.append("\t");
+                        i++;
+                    }
+                    if(input.charAt(i+1) == 'b'){
+                        outPut.append("\b");
+                        i++;
+                    }
+                    if(input.charAt(i+1) == 'f'){
+                        outPut.append("\f");
+                        i++;
+                    }
+                    if(input.charAt(i+1) == 'r') {
+                        outPut.append("\r");
+                        i++;
+                    }
+                    if(input.charAt(i+1) == '\"'){
+                        outPut.append("\"");
+                        i++;
+                    }
+                    if(input.charAt(i+1) == '\\'){
+                        outPut.append("\\");
+                        i++;
+                    }
+                    continue;
                 }
-                else if(input.charAt(i) == '\n'){
-                    outPut.append("n");
-                }
-                else if(input.charAt(i) == '\t'){
-                    outPut.append("t");
-                }
-                else if(input.charAt(i) == '\b'){
-                    outPut.append("b");
-                }
-                else if(input.charAt(i) == '\f'){
-                    outPut.append("f");
-                }
-                else if(input.charAt(i) == '\r'){
-                    outPut.append("r");
-                }else{
+                if(input.charAt(i) == '"') continue;
+                else{
                     outPut.append(input.charAt(i));
                 }
             }

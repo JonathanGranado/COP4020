@@ -165,6 +165,20 @@ public class LexerTests {
     }
 
     @Test
+    public void testLetters0() throws LexicalException {
+        String input = """
+				a bc 45d
+				""";
+        show(input);
+        ILexer lexer = getLexer(input);
+        checkIdent(lexer.next(),"a", 0,0);
+        checkIdent(lexer.next(),"bc",0,2);
+        checkInt(lexer.next(),45,0,5);
+        checkIdent(lexer.next(),"d",0,7);
+        checkEOF(lexer.next());
+    }
+
+    @Test
     public void testIdenInt() throws LexicalException {
         String input = """
 				a123 456b
@@ -298,7 +312,7 @@ public class LexerTests {
         checkToken(lexer.next(), IToken.Kind.KW_CONSOLE,	31, 0, "console");
         checkEOF(lexer.next());
     }
-    //@TODO see why this is giving wrong column number, looks like it stops working for those that have more than one character
+
     @Test
     void testAllSymbolTokens() throws LexicalException {
         String input = """
@@ -370,13 +384,13 @@ public class LexerTests {
 
     @Test
     public void testEscapeSequences0() throws LexicalException {
-        String input = "\"\\b \\t \\n \\f \\r \"";
+        String input = "\"\\b \\t \\n \\f \\r \" ";
         show(input);
         show("input chars= " + getASCII(input));
         ILexer lexer = getLexer(input);
         IToken t = lexer.next();
         String val = t.getStringValue();
-        show("getStringValueChars= 	" + getASCII(val));
+        show("getStringValueChars=" + getASCII(val));
         String expectedStringValue = "\b \t \n \f \r ";
         show("expectedStringValueChars=" + getASCII(expectedStringValue));
         assertEquals(expectedStringValue, val);
@@ -405,4 +419,119 @@ public class LexerTests {
         show("expectedTextChars="+getASCII(expectedText));
         assertEquals(expectedText,text);
     }
+
+    @Test
+    public void testBang() throws LexicalException{
+        String input = """
+        !=
+        !!
+        !=!
+        !!=>>>=<-<<<
+        """;
+        show(input);
+        ILexer lexer = getLexer(input);
+        checkToken(lexer.next(), IToken.Kind.NOT_EQUALS, 0, 0);
+        checkToken(lexer.next(), IToken.Kind.BANG, 1, 0);
+        checkToken(lexer.next(), IToken.Kind.BANG, 1, 1);
+        checkToken(lexer.next(), IToken.Kind.NOT_EQUALS, 2, 0);
+        checkToken(lexer.next(), IToken.Kind.BANG, 2, 2);
+        checkToken(lexer.next(), IToken.Kind.BANG, 3, 0 );
+        checkToken(lexer.next(), IToken.Kind.NOT_EQUALS, 3, 1);
+        checkToken(lexer.next(), IToken.Kind.RANGLE, 3, 3);
+        checkToken(lexer.next(), IToken.Kind.GE, 3, 5);
+        checkToken(lexer.next(), IToken.Kind.LARROW, 3,7);
+        checkToken(lexer.next(), IToken.Kind.LANGLE, 3, 9);
+        checkToken(lexer.next(), IToken.Kind.LT, 3, 11);
+        checkEOF(lexer.next());
+    }
+
+    @Test
+    public void testCodeExample() throws LexicalException{
+        String input = """
+  		string a = "hello\\nworld";
+  		int size = 11;
+  		string b = "";
+  		boolean display = true;
+  		
+	 	for (int i = size - 1;i >= 0; i++) [
+	 		b = b + a[i];
+	 	]
+
+  		if (display == true)
+  		print(b);
+	  	""";
+        show(input);
+        ILexer lexer = getLexer(input);
+        checkToken(lexer.next(), IToken.Kind.TYPE, 0, 0, "string");
+        checkToken(lexer.next(), IToken.Kind.IDENT, 0, 7, "a");
+        checkToken(lexer.next(), IToken.Kind.ASSIGN, 0, 9, "=");
+        checkToken(lexer.next(), IToken.Kind.STRING_LIT, 0, 11, "\"hello\\nworld\"");
+        checkToken(lexer.next(), IToken.Kind.SEMI, 0, 25);
+
+        checkToken(lexer.next(), IToken.Kind.TYPE, 1, 0, "int");
+        checkToken(lexer.next(), IToken.Kind.IDENT, 1, 4, "size");
+        checkToken(lexer.next(), IToken.Kind.ASSIGN, 1, 9, "=");
+        checkInt(lexer.next(), 11, 1, 11);
+        checkToken(lexer.next(), IToken.Kind.SEMI, 1, 13);
+
+        checkToken(lexer.next(), IToken.Kind.TYPE);
+        checkToken(lexer.next(), IToken.Kind.IDENT);
+        checkToken(lexer.next(), IToken.Kind.ASSIGN);
+        checkToken(lexer.next(), IToken.Kind.STRING_LIT);
+        checkToken(lexer.next(), IToken.Kind.SEMI);
+
+        checkToken(lexer.next(), IToken.Kind.TYPE, 3, 0, "boolean");
+        checkToken(lexer.next(), IToken.Kind.IDENT, 3, 8, "display");
+        checkToken(lexer.next(), IToken.Kind.ASSIGN, 3, 16, "=");
+        checkToken(lexer.next(), IToken.Kind.BOOLEAN_LIT, 3, 18, "true");
+        checkToken(lexer.next(), IToken.Kind.SEMI, 3, 22);
+
+        checkToken(lexer.next(), IToken.Kind.IDENT, 5, 0, "for");
+        checkToken(lexer.next(), IToken.Kind.LPAREN);
+        checkToken(lexer.next(), IToken.Kind.TYPE);
+        checkToken(lexer.next(), IToken.Kind.IDENT);
+        checkToken(lexer.next(), IToken.Kind.ASSIGN);
+        checkToken(lexer.next(), IToken.Kind.IDENT);
+        checkToken(lexer.next(), IToken.Kind.MINUS);
+        checkInt(lexer.next(), 1);
+
+
+        checkToken(lexer.next(), IToken.Kind.SEMI);
+        checkToken(lexer.next(), IToken.Kind.IDENT);
+        checkToken(lexer.next(), IToken.Kind.GE);
+        checkInt(lexer.next(), 0);
+        checkToken(lexer.next(), IToken.Kind.SEMI);
+        checkToken(lexer.next(), IToken.Kind.IDENT);
+        checkToken(lexer.next(), IToken.Kind.PLUS);
+        checkToken(lexer.next(), IToken.Kind.PLUS);
+        checkToken(lexer.next(), IToken.Kind.RPAREN);
+        checkToken(lexer.next(), IToken.Kind.LSQUARE);
+
+        checkToken(lexer.next(), IToken.Kind.IDENT);
+        checkToken(lexer.next(), IToken.Kind.ASSIGN);
+        checkToken(lexer.next(), IToken.Kind.IDENT);
+        checkToken(lexer.next(), IToken.Kind.PLUS);
+        checkToken(lexer.next(), IToken.Kind.IDENT);
+        checkToken(lexer.next(), IToken.Kind.LSQUARE);
+        checkToken(lexer.next(), IToken.Kind.IDENT);
+        checkToken(lexer.next(), IToken.Kind.RSQUARE);
+        checkToken(lexer.next(), IToken.Kind.SEMI);
+
+        checkToken(lexer.next(), IToken.Kind.RSQUARE);
+
+        checkToken(lexer.next(), IToken.Kind.KW_IF);
+        checkToken(lexer.next(), IToken.Kind.LPAREN);
+        checkToken(lexer.next(), IToken.Kind.IDENT);
+        checkToken(lexer.next(), IToken.Kind.EQUALS);
+        checkToken(lexer.next(), IToken.Kind.BOOLEAN_LIT);
+        checkToken(lexer.next(), IToken.Kind.RPAREN);
+        checkToken(lexer.next(), IToken.Kind.IDENT);
+        checkToken(lexer.next(), IToken.Kind.LPAREN);
+        checkToken(lexer.next(), IToken.Kind.IDENT);
+        checkToken(lexer.next(), IToken.Kind.RPAREN);
+        checkToken(lexer.next(), IToken.Kind.SEMI);
+
+        checkEOF(lexer.next());
+    }
+
 }
