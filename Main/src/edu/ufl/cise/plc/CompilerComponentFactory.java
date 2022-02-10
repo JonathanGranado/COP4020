@@ -8,7 +8,10 @@ public class CompilerComponentFactory {
 
     //This method will be invoked to get an instance of your lexer.
     public static ILexer getLexer(String input) throws LexicalException {
-        //TODO:  modify this method so it returns an instance of your Lexer instead of throwing the exception.
         return new Lexer(input);
+    }
+
+    public static IParser getParser(String input) throws SyntaxException {
+        return new Parser(input);
     }
 }

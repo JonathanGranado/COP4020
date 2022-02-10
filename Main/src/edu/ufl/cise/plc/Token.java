@@ -120,7 +120,6 @@ public class Token implements IToken {
     @Override
     //returns the String represented by the characters of this token if kind is STRING_LIT
     //The delimiters should be removed and escape sequences replaced by the characters they represent.
-    //TODO: set it up so the escape sequences are represented correctly
     public String getStringValue() {
         StringBuilder outPut = new StringBuilder();
         System.out.println(input);

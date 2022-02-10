@@ -382,6 +382,7 @@ public class LexerTests {
         return Arrays.toString(ascii);
     }
 
+
     @Test
     public void testEscapeSequences0() throws LexicalException {
         String input = "\"\\b \\t \\n \\f \\r \" ";
