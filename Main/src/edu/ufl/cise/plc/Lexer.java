@@ -318,7 +318,7 @@ public class Lexer implements ILexer {
                                 startPos++;
                             }
                             case '\"' -> {
-                                holdingToken += " \" ";
+                                holdingToken += "\" ";
                                 holdingTokens.add(new Token(IToken.Kind.STRING_LIT, holdingToken, startPos, 1, lineNumber));
                                 holdingToken = "";
                                 state = State.START;

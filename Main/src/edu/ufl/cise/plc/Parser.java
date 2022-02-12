@@ -23,7 +23,6 @@ public class Parser implements IParser {
     public Expr expr(){
         return null;
     }
-    // TODO: Look at the other functions and figure out what to adjust for this one
     public Expr AdditiveExpr() throws SyntaxException {
         IToken firstToken = t;
         Expr left = null;
@@ -51,9 +50,8 @@ public class Parser implements IParser {
         Expr right = null;
 
         left = UnaryExpr();
-        IToken.Kind tempKind = t.getKind();
 
-        while (tempKind == IToken.Kind.MOD || tempKind == IToken.Kind.TIMES || tempKind == IToken.Kind.DIV){
+        while (t.getKind() == IToken.Kind.MOD || t.getKind() == IToken.Kind.TIMES || t.getKind() == IToken.Kind.DIV){
             IToken op = t;
             consume();
             right = UnaryExpr();
@@ -93,7 +91,7 @@ public class Parser implements IParser {
         return new UnaryExprPostfix(firstToken, left, right);
     }
 
-    public PixelSelector PixelSelector() {
+    public PixelSelector PixelSelector() throws SyntaxException {
         IToken firstToken = t;
         Expr x = null;
         Expr y = null;
@@ -102,13 +100,13 @@ public class Parser implements IParser {
                 return null;
         }else {
             consume();
-            x = expr();
+            x = AdditiveExpr();
         }
         //TODO: I changed the firstToken here to t so that the change from consume actually
         // does something, maybe we should use match
         if (t.getKind() == IToken.Kind.COMMA) {
                 consume();
-                y = expr();
+                y = AdditiveExpr();
                 if (t.getKind() == IToken.Kind.RSQUARE) {
                     consume();
                 }
