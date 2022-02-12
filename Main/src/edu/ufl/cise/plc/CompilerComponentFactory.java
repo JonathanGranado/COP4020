@@ -11,7 +11,7 @@ public class CompilerComponentFactory {
         return new Lexer(input);
     }
 
-    public static IParser getParser(String input) throws SyntaxException {
+    public static IParser getParser(String input) throws LexicalException {
         return new Parser(input);
     }
 }
