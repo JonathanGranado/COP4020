@@ -57,6 +57,30 @@ public class Parser implements IParser {
         return e;
     }
 
+
+
+    void PixelSelector() {
+        IToken firstToken = t;
+        Expr x = null;
+        Expr y = null;
+        if (firstToken.getKind() == IToken.Kind.LSQUARE) {
+            consume();
+            x = expr();
+            if (firstToken.getKind() == IToken.Kind.COMMA) {
+                consume();
+                y = expr();
+                if (firstToken.getKind() == IToken.Kind.RSQUARE) {
+                    consume();
+                }
+            }
+        }
+    }
+
+}
+
+
+
+
         void consume(){
                 t = lex.next();
         }
