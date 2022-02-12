@@ -16,8 +16,8 @@ public class Parser implements IParser {
 
     @Override
     public ASTNode parse() throws PLCException {
-        PrimaryExpr();
-        return null;
+        Expr e = UnaryExpr();
+        return e;
     }
 
     public Expr expr(){
@@ -47,7 +47,9 @@ public class Parser implements IParser {
         IToken.Kind tempKind = firstToken.getKind();
         if(tempKind == IToken.Kind.COLOR_OP || tempKind == IToken.Kind.IMAGE_OP || tempKind == IToken.Kind.BANG || tempKind == IToken.Kind.MINUS){
             consume();
-            x = UnaryExpr();
+
+            Expr e =  UnaryExpr();
+            x = new UnaryExpr(firstToken, firstToken, e);
         }else{
             x = UnaryExprPostFix();
             return x;
@@ -58,14 +60,21 @@ public class Parser implements IParser {
     public Expr UnaryExprPostFix() throws SyntaxException {
         IToken firstToken = t;
         Expr left = null;
-        Expr right = null;
+        PixelSelector right = null;
         left = this.PrimaryExpr();
-        consume();
-        right = PixelSelector();
-        return left;
+        // TODO: This consume was not necessary here, marking this in case we have the same issue in another func
+        //consume();
+        right = this.PixelSelector();
+        // if it has no pixel selector and right is null, we just return left
+        if (right == null){
+            return left;
+        }
+        // if it has a Pixel Selector we create an object so we can return
+        // both PrimaryExpr and PixelSelector
+        return new UnaryExprPostfix(firstToken, left, right);
     }
 
-    public Expr PixelSelector() {
+    public PixelSelector PixelSelector() {
         IToken firstToken = t;
         Expr x = null;
         Expr y = null;
@@ -76,14 +85,16 @@ public class Parser implements IParser {
             consume();
             x = expr();
         }
-        if (firstToken.getKind() == IToken.Kind.COMMA) {
+        //TODO: I changed the firstToken here to t so that the change from consume actually
+        // does something, maybe we should use match
+        if (t.getKind() == IToken.Kind.COMMA) {
                 consume();
                 y = expr();
-                if (firstToken.getKind() == IToken.Kind.RSQUARE) {
+                if (t.getKind() == IToken.Kind.RSQUARE) {
                     consume();
                 }
             }
-        return x;
+        return new PixelSelector(firstToken, x, y);
     }
     // first grammar
 
