@@ -104,7 +104,7 @@ public class Token implements IToken {
 
     @Override
     public boolean getBooleanValue() {
-        String substring = input.substring(pos, pos + length);
+        String substring = input.trim();
         if (kind == Kind.BOOLEAN_LIT) {
             if (substring.equals("true")) {
                 return true;

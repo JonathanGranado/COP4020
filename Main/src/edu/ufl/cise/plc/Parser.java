@@ -16,12 +16,33 @@ public class Parser implements IParser {
 
     @Override
     public ASTNode parse() throws PLCException {
-        Expr e = UnaryExpr();
+        Expr e = AdditiveExpr();
         return e;
     }
 
     public Expr expr(){
         return null;
+    }
+    // TODO: Look at the other functions and figure out what to adjust for this one
+    public Expr AdditiveExpr() throws SyntaxException {
+        IToken firstToken = t;
+        Expr left = null;
+        Expr right = null;
+
+        left = MultiplicativeExpr();
+        // TODO: replace tempKind with the t.getKind so we dont have to update it
+
+        IToken.Kind tempKind = t.getKind();
+
+        while (tempKind == IToken.Kind.PLUS || tempKind == IToken.Kind.MINUS){
+            IToken op = t;
+            consume();
+            right = MultiplicativeExpr();
+
+            left = new BinaryExpr(firstToken, left, op, right);
+            tempKind = t.getKind();
+        }
+        return left;
     }
 
     public Expr MultiplicativeExpr() throws SyntaxException {
@@ -30,7 +51,7 @@ public class Parser implements IParser {
         Expr right = null;
 
         left = UnaryExpr();
-        IToken.Kind tempKind = firstToken.getKind();
+        IToken.Kind tempKind = t.getKind();
 
         while (tempKind == IToken.Kind.MOD || tempKind == IToken.Kind.TIMES || tempKind == IToken.Kind.DIV){
             IToken op = t;
@@ -47,7 +68,6 @@ public class Parser implements IParser {
         IToken.Kind tempKind = firstToken.getKind();
         if(tempKind == IToken.Kind.COLOR_OP || tempKind == IToken.Kind.IMAGE_OP || tempKind == IToken.Kind.BANG || tempKind == IToken.Kind.MINUS){
             consume();
-
             Expr e =  UnaryExpr();
             x = new UnaryExpr(firstToken, firstToken, e);
         }else{
@@ -62,8 +82,7 @@ public class Parser implements IParser {
         Expr left = null;
         PixelSelector right = null;
         left = this.PrimaryExpr();
-        // TODO: This consume was not necessary here, marking this in case we have the same issue in another func
-        //consume();
+        consume();
         right = this.PixelSelector();
         // if it has no pixel selector and right is null, we just return left
         if (right == null){
@@ -101,21 +120,22 @@ public class Parser implements IParser {
     public Expr PrimaryExpr() throws SyntaxException {
         IToken firstToken = t;
         Expr e = null;
-        if(firstToken.getKind() == IToken.Kind.BOOLEAN_LIT){
-            e = new BooleanLitExpr(firstToken);
-            consume();
-        }else if(firstToken.getKind() == IToken.Kind.STRING_LIT){
+        if(firstToken.getKind() == IToken.Kind.STRING_LIT){
             e = new StringLitExpr(firstToken);
-            consume();
+            // consume();
+            //TODO: Breaks here, test 6
+        }else if(firstToken.getKind() == IToken.Kind.BOOLEAN_LIT){
+            e = new BooleanLitExpr(firstToken);
+            //consume();
         }else if(firstToken.getKind() == IToken.Kind.INT_LIT){
             e = new IntLitExpr(firstToken);
-            consume();
+           // consume();
         }else if(firstToken.getKind() == IToken.Kind.FLOAT_LIT){
             e = new FloatLitExpr(firstToken);
-            consume();
+           // consume();
         }else if(firstToken.getKind() == IToken.Kind.IDENT){
             e = new IdentExpr(firstToken);
-            consume();
+          //  consume();
         }else if(firstToken.getKind() == IToken.Kind.LPAREN){
             consume();
             e = expr();
