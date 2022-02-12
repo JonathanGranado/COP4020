@@ -24,7 +24,53 @@ public class Parser implements IParser {
         return null;
     }
 
+
+    public Expr UnaryExpr() throws SyntaxException {
+        IToken firstToken = t;
+        Expr x = null;
+        IToken.Kind tempKind = firstToken.getKind();
+        if(tempKind == IToken.Kind.COLOR_OP || tempKind == IToken.Kind.IMAGE_OP || tempKind == IToken.Kind.BANG || tempKind == IToken.Kind.MINUS){
+            consume();
+            x = UnaryExpr();
+        }else{
+            x = UnaryExprPostFix();
+            return x;
+        }
+        return x;
+    }
+
+    public Expr UnaryExprPostFix() throws SyntaxException {
+        IToken firstToken = t;
+        Expr left = null;
+        Expr right = null;
+        left = this.PrimaryExpr();
+        consume();
+        right = PixelSelector();
+        return left;
+    }
+
+    public Expr PixelSelector() {
+        IToken firstToken = t;
+        Expr x = null;
+        Expr y = null;
+
+        if (firstToken.getKind() != IToken.Kind.LSQUARE) {
+                return null;
+        }else {
+            consume();
+            x = expr();
+        }
+        if (firstToken.getKind() == IToken.Kind.COMMA) {
+                consume();
+                y = expr();
+                if (firstToken.getKind() == IToken.Kind.RSQUARE) {
+                    consume();
+                }
+            }
+        return x;
+    }
     // first grammar
+
     public Expr PrimaryExpr() throws SyntaxException {
         IToken firstToken = t;
         Expr e = null;
@@ -56,28 +102,6 @@ public class Parser implements IParser {
         }
         return e;
     }
-
-
-
-    void PixelSelector() {
-        IToken firstToken = t;
-        Expr x = null;
-        Expr y = null;
-        if (firstToken.getKind() == IToken.Kind.LSQUARE) {
-            consume();
-            x = expr();
-            if (firstToken.getKind() == IToken.Kind.COMMA) {
-                consume();
-                y = expr();
-                if (firstToken.getKind() == IToken.Kind.RSQUARE) {
-                    consume();
-                }
-            }
-        }
-    }
-
-}
-
 
 
 
