@@ -24,6 +24,22 @@ public class Parser implements IParser {
         return null;
     }
 
+    public Expr MultiplicativeExpr() throws SyntaxException {
+        IToken firstToken = t;
+        Expr left = null;
+        Expr right = null;
+
+        left = UnaryExpr();
+        IToken.Kind tempKind = firstToken.getKind();
+
+        while (tempKind == IToken.Kind.MOD || tempKind == IToken.Kind.TIMES || tempKind == IToken.Kind.DIV){
+            IToken op = t;
+            consume();
+            right = UnaryExpr();
+            left = new BinaryExpr(firstToken, left, op, right);
+        }
+        return left;
+    }
 
     public Expr UnaryExpr() throws SyntaxException {
         IToken firstToken = t;
@@ -102,6 +118,7 @@ public class Parser implements IParser {
         }
         return e;
     }
+
 
 
 
