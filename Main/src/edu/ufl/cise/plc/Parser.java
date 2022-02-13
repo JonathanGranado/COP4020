@@ -7,16 +7,14 @@ public class Parser implements IParser {
     IToken t;
 
     public Parser(String input) throws LexicalException {
-            lex = new Lexer(input);
-            t = lex.next();
+        lex = new Lexer(input);
+        t = lex.next();
     }
-
-
 
 
     @Override
     public ASTNode parse() throws PLCException {
-        Expr e = expr();
+        Expr e = ConditionalExpr();
         return e;
     }
 
@@ -27,8 +25,42 @@ public class Parser implements IParser {
     }
 
     public Expr ConditionalExpr() throws SyntaxException {
-        // this is confusing :(
-       return null;
+        IToken firstToken = t;
+        Expr condition;
+        Expr trueCase;
+        Expr falseCase;
+        Expr result = null;
+        if (match(IToken.Kind.KW_IF)) {
+            consume();
+            if (match(IToken.Kind.LPAREN)) {
+                consume();
+                condition = LogicalOrExpr();
+                if (match(IToken.Kind.RPAREN)) {
+                    consume();
+                    trueCase = LogicalOrExpr();
+                    if (match(IToken.Kind.KW_ELSE)) {
+                        consume();
+                        falseCase = LogicalOrExpr();
+                        if (match(IToken.Kind.KW_FI)) {
+                            consume();
+                            result = new ConditionalExpr(firstToken, condition, trueCase, falseCase);
+                        } else {
+                            // error
+                        }
+                    } else {
+                        // error
+                    }
+                } else {
+                    // error
+                }
+            } else {
+                // error
+            }
+        } else {
+            // TODO: error handling
+            return LogicalOrExpr();
+        }
+        return result;
     }
 
 
@@ -38,7 +70,7 @@ public class Parser implements IParser {
         Expr right = null;
 
         left = LogicalAndExpr();
-        while (t.getKind() == IToken.Kind.OR){
+        while (t.getKind() == IToken.Kind.OR) {
             IToken op = t;
             consume();
             right = LogicalAndExpr();
@@ -54,7 +86,7 @@ public class Parser implements IParser {
         Expr right = null;
 
         left = ComparisonExpr();
-        while (t.getKind() == IToken.Kind.AND){
+        while (t.getKind() == IToken.Kind.AND) {
             IToken op = t;
             consume();
             right = ComparisonExpr();
@@ -70,8 +102,8 @@ public class Parser implements IParser {
         Expr right;
 
         left = AdditiveExpr();
-        while( t.getKind() == IToken.Kind.LT || t.getKind() == IToken.Kind.GT || t.getKind() == IToken.Kind.EQUALS ||
-                t.getKind() == IToken.Kind.NOT_EQUALS || t.getKind() == IToken.Kind.LE || t.getKind() == IToken.Kind.GE ){
+        while (t.getKind() == IToken.Kind.LT || t.getKind() == IToken.Kind.GT || t.getKind() == IToken.Kind.EQUALS ||
+                t.getKind() == IToken.Kind.NOT_EQUALS || t.getKind() == IToken.Kind.LE || t.getKind() == IToken.Kind.GE) {
             IToken op = t;
             consume();
             right = AdditiveExpr();
@@ -86,7 +118,7 @@ public class Parser implements IParser {
         Expr right = null;
 
         left = MultiplicativeExpr();
-        while (t.getKind() == IToken.Kind.PLUS || t.getKind() == IToken.Kind.MINUS){
+        while (t.getKind() == IToken.Kind.PLUS || t.getKind() == IToken.Kind.MINUS) {
             IToken op = t;
             consume();
             right = MultiplicativeExpr();
@@ -103,7 +135,7 @@ public class Parser implements IParser {
 
         left = UnaryExpr();
 
-        while (t.getKind() == IToken.Kind.MOD || t.getKind() == IToken.Kind.TIMES || t.getKind() == IToken.Kind.DIV){
+        while (t.getKind() == IToken.Kind.MOD || t.getKind() == IToken.Kind.TIMES || t.getKind() == IToken.Kind.DIV) {
             IToken op = t;
             consume();
             right = UnaryExpr();
@@ -116,11 +148,11 @@ public class Parser implements IParser {
         IToken firstToken = t;
         Expr x = null;
         IToken.Kind tempKind = firstToken.getKind();
-        if(tempKind == IToken.Kind.COLOR_OP || tempKind == IToken.Kind.IMAGE_OP || tempKind == IToken.Kind.BANG || tempKind == IToken.Kind.MINUS){
+        if (tempKind == IToken.Kind.COLOR_OP || tempKind == IToken.Kind.IMAGE_OP || tempKind == IToken.Kind.BANG || tempKind == IToken.Kind.MINUS) {
             consume();
-            Expr e =  UnaryExpr();
+            Expr e = UnaryExpr();
             x = new UnaryExpr(firstToken, firstToken, e);
-        }else{
+        } else {
             x = UnaryExprPostFix();
             return x;
         }
@@ -135,7 +167,7 @@ public class Parser implements IParser {
         consume();
         right = this.PixelSelector();
         // if it has no pixel selector and right is null, we just return left
-        if (right == null){
+        if (right == null) {
             return left;
         }
         // if it has a Pixel Selector we create an object so we can return
@@ -149,20 +181,20 @@ public class Parser implements IParser {
         Expr y = null;
 
         if (firstToken.getKind() != IToken.Kind.LSQUARE) {
-                return null;
-        }else {
+            return null;
+        } else {
             consume();
             x = AdditiveExpr();
         }
         //TODO: I changed the firstToken here to t so that the change from consume actually
         // does something, maybe we should use match
         if (t.getKind() == IToken.Kind.COMMA) {
+            consume();
+            y = AdditiveExpr();
+            if (t.getKind() == IToken.Kind.RSQUARE) {
                 consume();
-                y = AdditiveExpr();
-                if (t.getKind() == IToken.Kind.RSQUARE) {
-                    consume();
-                }
             }
+        }
         return new PixelSelector(firstToken, x, y);
     }
     // first grammar
@@ -170,50 +202,48 @@ public class Parser implements IParser {
     public Expr PrimaryExpr() throws SyntaxException {
         IToken firstToken = t;
         Expr e = null;
-        if(firstToken.getKind() == IToken.Kind.STRING_LIT){
+        if (firstToken.getKind() == IToken.Kind.STRING_LIT) {
             e = new StringLitExpr(firstToken);
             // consume();
             //TODO: Breaks here, test 6
-        }else if(firstToken.getKind() == IToken.Kind.BOOLEAN_LIT){
+        } else if (firstToken.getKind() == IToken.Kind.BOOLEAN_LIT) {
             e = new BooleanLitExpr(firstToken);
             //consume();
-        }else if(firstToken.getKind() == IToken.Kind.INT_LIT){
+        } else if (firstToken.getKind() == IToken.Kind.INT_LIT) {
             e = new IntLitExpr(firstToken);
-           // consume();
-        }else if(firstToken.getKind() == IToken.Kind.FLOAT_LIT){
+            // consume();
+        } else if (firstToken.getKind() == IToken.Kind.FLOAT_LIT) {
             e = new FloatLitExpr(firstToken);
-           // consume();
-        }else if(firstToken.getKind() == IToken.Kind.IDENT){
+            // consume();
+        } else if (firstToken.getKind() == IToken.Kind.IDENT) {
             e = new IdentExpr(firstToken);
-          //  consume();
-        }else if(firstToken.getKind() == IToken.Kind.LPAREN){
+            //  consume();
+        } else if (firstToken.getKind() == IToken.Kind.LPAREN) {
             consume();
             e = expr();
-            if(match(IToken.Kind.RPAREN)){
+            if (match(IToken.Kind.RPAREN)) {
                 consume();
-            }else{
+            } else {
                 error("Expected RPAREN");
             }
-        }else{
+        } else {
             error("Expected");
         }
         return e;
     }
 
 
+    void consume() {
+        t = lex.next();
+    }
 
+    private boolean match(IToken.Kind kind) {
+        return t.getKind() == kind;
+    }
 
-        void consume(){
-                t = lex.next();
-        }
-
-        private boolean match(IToken.Kind kind){
-            return t.getKind() == kind;
-        }
-
-        private void error(String m) throws SyntaxException {
-            throw new SyntaxException(m);
-        }
+    private void error(String m) throws SyntaxException {
+        throw new SyntaxException(m);
+    }
 }
 
 
