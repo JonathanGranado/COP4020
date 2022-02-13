@@ -19,7 +19,6 @@ public class Parser implements IParser {
     }
 
     public Expr expr() throws SyntaxException {
-        // hello
         Expr e = ConditionalExpr();
         return e;
     }
@@ -45,16 +44,16 @@ public class Parser implements IParser {
                             consume();
                             result = new ConditionalExpr(firstToken, condition, trueCase, falseCase);
                         } else {
-                            // error
+                            error("Was expecting a FI");
                         }
                     } else {
-                        // error
+                        error("Was expecting an Else");
                     }
                 } else {
-                    // error
+                    error("Was expecting a Right Paren");
                 }
             } else {
-                // error
+                error("Was expecting a Left Paren");
             }
         } else {
             // TODO: error handling
@@ -227,7 +226,7 @@ public class Parser implements IParser {
                 error("Expected RPAREN");
             }
         } else {
-            error("Expected");
+            error("Expected Left Paren ");
         }
         return e;
     }
