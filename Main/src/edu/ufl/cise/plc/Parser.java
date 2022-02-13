@@ -16,30 +16,82 @@ public class Parser implements IParser {
 
     @Override
     public ASTNode parse() throws PLCException {
-        Expr e = AdditiveExpr();
+        Expr e = expr();
         return e;
     }
 
-    public Expr expr(){
-        return null;
+    public Expr expr() throws SyntaxException {
+        Expr left = ConditionalExpr();
+        Expr right = LogicalOrExpr();
+        return right;
     }
+
+    public Expr ConditionalExpr() throws SyntaxException {
+        // this is confusing :(
+       return null;
+    }
+
+
+    public Expr LogicalOrExpr() throws SyntaxException {
+        IToken firstToken = t;
+        Expr left = null;
+        Expr right = null;
+
+        left = LogicalAndExpr();
+        while (t.getKind() == IToken.Kind.OR){
+            IToken op = t;
+            consume();
+            right = LogicalAndExpr();
+
+            left = new BinaryExpr(firstToken, left, op, right);
+        }
+        return left;
+    }
+
+    public Expr LogicalAndExpr() throws SyntaxException {
+        IToken firstToken = t;
+        Expr left = null;
+        Expr right = null;
+
+        left = ComparisonExpr();
+        while (t.getKind() == IToken.Kind.AND){
+            IToken op = t;
+            consume();
+            right = ComparisonExpr();
+
+            left = new BinaryExpr(firstToken, left, op, right);
+        }
+        return left;
+    }
+
+    public Expr ComparisonExpr() throws SyntaxException {
+        IToken firstToken = t;
+        Expr left;
+        Expr right;
+
+        left = AdditiveExpr();
+        while( t.getKind() == IToken.Kind.LT || t.getKind() == IToken.Kind.GT || t.getKind() == IToken.Kind.EQUALS ||
+                t.getKind() == IToken.Kind.NOT_EQUALS || t.getKind() == IToken.Kind.LE || t.getKind() == IToken.Kind.GE ){
+            IToken op = t;
+            consume();
+            right = AdditiveExpr();
+            left = new BinaryExpr(firstToken, left, op, right);
+        }
+        return left;
+    }
+
     public Expr AdditiveExpr() throws SyntaxException {
         IToken firstToken = t;
         Expr left = null;
         Expr right = null;
 
         left = MultiplicativeExpr();
-        // TODO: replace tempKind with the t.getKind so we dont have to update it
-
-        IToken.Kind tempKind = t.getKind();
-
-        while (tempKind == IToken.Kind.PLUS || tempKind == IToken.Kind.MINUS){
+        while (t.getKind() == IToken.Kind.PLUS || t.getKind() == IToken.Kind.MINUS){
             IToken op = t;
             consume();
             right = MultiplicativeExpr();
 
             left = new BinaryExpr(firstToken, left, op, right);
-            tempKind = t.getKind();
         }
         return left;
     }
