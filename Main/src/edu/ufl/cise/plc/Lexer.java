@@ -90,7 +90,6 @@ public class Lexer implements ILexer {
         while (true) {
             char ch = chars[pos];
             if (state != null) {
-                System.out.println("Pos: " + pos);
                 switch (state) {
                     case START -> {
                         switch (ch) {

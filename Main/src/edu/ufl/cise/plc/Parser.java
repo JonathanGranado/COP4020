@@ -14,14 +14,14 @@ public class Parser implements IParser {
 
     @Override
     public ASTNode parse() throws PLCException {
-        Expr e = ConditionalExpr();
+        Expr e = expr();
         return e;
     }
 
     public Expr expr() throws SyntaxException {
-        Expr left = ConditionalExpr();
-        Expr right = LogicalOrExpr();
-        return right;
+        // hello
+        Expr e = ConditionalExpr();
+        return e;
     }
 
     public Expr ConditionalExpr() throws SyntaxException {
@@ -34,13 +34,13 @@ public class Parser implements IParser {
             consume();
             if (match(IToken.Kind.LPAREN)) {
                 consume();
-                condition = LogicalOrExpr();
+                condition = expr();
                 if (match(IToken.Kind.RPAREN)) {
                     consume();
-                    trueCase = LogicalOrExpr();
+                    trueCase = expr();
                     if (match(IToken.Kind.KW_ELSE)) {
                         consume();
-                        falseCase = LogicalOrExpr();
+                        falseCase = expr();
                         if (match(IToken.Kind.KW_FI)) {
                             consume();
                             result = new ConditionalExpr(firstToken, condition, trueCase, falseCase);

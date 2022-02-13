@@ -336,4 +336,31 @@ class Assignment2StarterTests {
 		});
 		show(e);
 	}
+	@DisplayName("test15")
+	@Test
+	public void test15(TestInfo testInfo) throws Exception {
+		String input = """
+                a * b * c
+                """;
+		show("-------------");
+		show(input);
+		Expr ast = (Expr) getAST(input);
+		show(ast);
+		assertThat("", ast, instanceOf(BinaryExpr.class));
+		assertEquals(TIMES, ((BinaryExpr) ast).getOp().getKind());
+		Expr var2 = ((BinaryExpr) ast).getLeft();
+		assertThat("", var2, instanceOf(IdentExpr.class));
+		assertEquals("a", var2.getText());
+		Expr var3 = ((BinaryExpr) ast).getRight();
+		assertThat("", var3, instanceOf(BinaryExpr.class));
+		assertEquals(TIMES, ((BinaryExpr) var3).getOp().getKind());
+		Expr var4 = ((BinaryExpr) var3).getLeft();
+		assertThat("", var4, instanceOf(IdentExpr.class));
+		assertEquals("b", var4.getText());
+		Expr var5 = ((BinaryExpr) var3).getRight();
+		assertThat("", var5, instanceOf(IdentExpr.class));
+		assertEquals("c", var5.getText());
+
+	}
+
 }
