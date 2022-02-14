@@ -74,6 +74,15 @@ public class LexerTests {
         checkToken(t, IToken.Kind.EOF);
     }
     //The lexer should add an EOF token to the end.
+
+    @Test
+    public void testingErrors() throws LexicalException{
+        String input = "a1244";
+        show(input);
+        ILexer lexer = getLexer(input);
+        checkIdent(lexer.next(), "a");
+        checkFloat(lexer.next(), (float) 124.4);
+    }
     @Test
     void testEmpty() throws LexicalException {
         String input = "";
@@ -116,21 +125,18 @@ public class LexerTests {
     //Example for testing input with an illegal character
     @Test
     void testError0() throws LexicalException {
-        String input = """
-				abc
-				@
-				""";
+        String input = "abc\\g xyz";
         show(input);
         ILexer lexer = getLexer(input);
         //this check should succeed
         checkIdent(lexer.next(), "abc");
-        //this is expected to throw an exception since @ is not a legal
-        //character unless it is part of a string or comment
         assertThrows(LexicalException.class, () -> {
             @SuppressWarnings("unused")
             IToken token = lexer.next();
         });
     }
+
+
 
     //Several identifiers to test positions
     @Test

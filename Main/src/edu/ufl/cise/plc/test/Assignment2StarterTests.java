@@ -349,6 +349,32 @@ class Assignment2StarterTests {
 		assertThat("", ast, instanceOf(BinaryExpr.class));
 		assertEquals(TIMES, ((BinaryExpr) ast).getOp().getKind());
 		Expr var2 = ((BinaryExpr) ast).getLeft();
+		assertThat("", var2, instanceOf(BinaryExpr.class));
+		assertEquals(TIMES, ((BinaryExpr) var2).getOp().getKind());
+		Expr var3 = ((BinaryExpr) var2).getLeft();
+		assertThat("", var3, instanceOf(IdentExpr.class));
+		assertEquals("a", var3.getText());
+		Expr var4 = ((BinaryExpr) var2).getRight();
+		assertThat("", var4, instanceOf(IdentExpr.class));
+		assertEquals("b", var4.getText());
+		Expr var5 = ((BinaryExpr) ast).getRight();
+		assertThat("", var5, instanceOf(IdentExpr.class));
+		assertEquals("c", var5.getText());
+	}
+
+	@DisplayName("test16")
+	@Test
+	public void test16(TestInfo testInfo) throws Exception {
+		String input = """
+            	a + b * c
+                """;
+		show("-------------");
+		show(input);
+		Expr ast = (Expr) getAST(input);
+		show(ast);
+		assertThat("", ast, instanceOf(BinaryExpr.class));
+		assertEquals(PLUS, ((BinaryExpr) ast).getOp().getKind());
+		Expr var2 = ((BinaryExpr) ast).getLeft();
 		assertThat("", var2, instanceOf(IdentExpr.class));
 		assertEquals("a", var2.getText());
 		Expr var3 = ((BinaryExpr) ast).getRight();
@@ -361,6 +387,47 @@ class Assignment2StarterTests {
 		assertThat("", var5, instanceOf(IdentExpr.class));
 		assertEquals("c", var5.getText());
 
+	}
+
+	@DisplayName("test17")
+	@Test
+	public void test17(TestInfo testInfo) throws Exception {
+		String input = """
+            	a + b * c
+                """;
+		show("-------------");
+		show(input);
+		Expr ast = (Expr) getAST(input);
+		show(ast);
+		assertThat("", ast, instanceOf(BinaryExpr.class));
+		assertEquals(PLUS, ((BinaryExpr) ast).getOp().getKind());
+		Expr var2 = ((BinaryExpr) ast).getLeft();
+		assertThat("", var2, instanceOf(IdentExpr.class));
+		assertEquals("a", var2.getText());
+		Expr var3 = ((BinaryExpr) ast).getRight();
+		assertThat("", var3, instanceOf(BinaryExpr.class));
+		assertEquals(TIMES, ((BinaryExpr) var3).getOp().getKind());
+		Expr var4 = ((BinaryExpr) var3).getLeft();
+		assertThat("", var4, instanceOf(IdentExpr.class));
+		assertEquals("b", var4.getText());
+		Expr var5 = ((BinaryExpr) var3).getRight();
+		assertThat("", var5, instanceOf(IdentExpr.class));
+		assertEquals("c", var5.getText());
+
+	}
+
+	@DisplayName("testEOF")
+	@Test
+	public void testEOF(TestInfo testinfo) throws Exception{
+		String input = """
+        x +
+        """;
+		show("-------------");
+		show(input);
+		Exception e =assertThrows(SyntaxException.class,() ->{
+			getAST(input);
+		});
+		show(e);
 	}
 
 }

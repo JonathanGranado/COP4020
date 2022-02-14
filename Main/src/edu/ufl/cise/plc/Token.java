@@ -120,7 +120,7 @@ public class Token implements IToken {
     @Override
     //returns the String represented by the characters of this token if kind is STRING_LIT
     //The delimiters should be removed and escape sequences replaced by the characters they represent.
-    public String getStringValue() {
+    public String getStringValue()  {
         StringBuilder outPut = new StringBuilder();
         System.out.println(input);
         if(kind == Kind.STRING_LIT){
@@ -153,6 +153,8 @@ public class Token implements IToken {
                     if(input.charAt(i+1) == '\\'){
                         outPut.append("\\");
                         i++;
+                    }else{
+                        throw new LexicalException("Incorrect escape sequence");
                     }
                     continue;
                 }
