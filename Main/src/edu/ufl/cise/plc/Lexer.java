@@ -106,6 +106,7 @@ public class Lexer implements ILexer {
                                 state = State.HAVE_QUOTE;
                                 startPos = pos;
                                 pos++;
+                                holdingToken += ch;
                             }
                             case '&' -> {
                                 startPos = pos - startPos;
@@ -310,18 +311,18 @@ public class Lexer implements ILexer {
                     // start of string lit
                     case HAVE_QUOTE -> {
                         switch (ch) {
-                            case '\'' -> {
-                                holdingToken += ch;
-                                state = State.IN_STRING;
-                                pos++;
-                                startPos++;
-                            }
                             case '\"' -> {
-                                holdingToken += "\" ";
+                                // TODO: Figure out a way to check if it is the end of a string lit as you can have quotes inside the start and end quote
+                                holdingToken += "\"";
                                 holdingTokens.add(new Token(IToken.Kind.STRING_LIT, holdingToken, startPos, 1, lineNumber));
                                 holdingToken = "";
                                 state = State.START;
                                 pos++;
+                            }
+                            case '~' ->{
+                                if(chars[pos+1] != '\n') {
+                                    throw new LexicalException("Missing a \" to end string");
+                                }
                             }
                             default -> {
                                 holdingToken += ch;
@@ -440,8 +441,6 @@ public class Lexer implements ILexer {
                                 state = State.HAVE_DOT;
                             }
                             default -> {
-                                System.out.println("Creating new  token\n"+holdingToken+" Start = "+ startPos + " Pos = " + pos);
-
                                 holdingTokens.add(new Token(IToken.Kind.INT_LIT, holdingToken, startPos, holdingToken.length(), lineNumber));
                                 try {
                                     Integer.parseInt(holdingToken);

@@ -120,7 +120,7 @@ public class Token implements IToken {
     @Override
     //returns the String represented by the characters of this token if kind is STRING_LIT
     //The delimiters should be removed and escape sequences replaced by the characters they represent.
-    public String getStringValue()  {
+    public String getStringValue() throws LexicalException {
         StringBuilder outPut = new StringBuilder();
         System.out.println(input);
         if(kind == Kind.STRING_LIT){
@@ -129,36 +129,46 @@ public class Token implements IToken {
                     if(input.charAt(i+1) == 'n'){
                         outPut.append("\n");
                         i++;
+                        continue;
                     }
                     if(input.charAt(i+1) == 't'){
                         outPut.append("\t");
                         i++;
+                        continue;
                     }
                     if(input.charAt(i+1) == 'b'){
                         outPut.append("\b");
                         i++;
+                        continue;
                     }
                     if(input.charAt(i+1) == 'f'){
                         outPut.append("\f");
                         i++;
+                        continue;
                     }
                     if(input.charAt(i+1) == 'r') {
                         outPut.append("\r");
                         i++;
+                        continue;
                     }
                     if(input.charAt(i+1) == '\"'){
                         outPut.append("\"");
                         i++;
+                        continue;
+                    }
+                    if(input.charAt(i+1) == '\''){
+                        outPut.append("'");
+                        i++;
+                        continue;
                     }
                     if(input.charAt(i+1) == '\\'){
                         outPut.append("\\");
                         i++;
+                        continue;
                     }else{
                         throw new LexicalException("Incorrect escape sequence");
                     }
-                    continue;
-                }
-                if(input.charAt(i) == '"') continue;
+                }else if(input.charAt(i) == '"') continue;
                 else{
                     outPut.append(input.charAt(i));
                 }
