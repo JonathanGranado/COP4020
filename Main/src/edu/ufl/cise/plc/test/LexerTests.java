@@ -3,6 +3,8 @@ package edu.ufl.cise.plc.test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+
+import org.junit.Ignore;
 import org.junit.jupiter.api.Test;
 import edu.ufl.cise.plc.*;
 
@@ -39,7 +41,10 @@ public class LexerTests {
         assertEquals(expectedText, t.getText());
         assertEquals(new IToken.SourceLocation(expectedLine,expectedColumn), t.getSourceLocation());
     }
-
+    void checkToken(IToken t, IToken.Kind expectedKind, String expectedText){
+        assertEquals(expectedKind, t.getKind());
+        assertEquals(expectedText, t.getText());
+    }
     //check that this token is an IDENT and has the expected name
     void checkIdent(IToken t, String expectedName){
         assertEquals(IToken.Kind.IDENT, t.getKind());
@@ -76,13 +81,33 @@ public class LexerTests {
     //The lexer should add an EOF token to the end.
 
     @Test
-    public void testingErrors() throws LexicalException{
-        String input = "a1244";
+    void testError0() throws LexicalException {
+        String input = """
+                    abc
+                    @
+                    """;
         show(input);
         ILexer lexer = getLexer(input);
-        checkIdent(lexer.next(), "a");
-        checkFloat(lexer.next(), (float) 124.4);
+        //this check should succeed
+        checkIdent(lexer.next(), "abc");
+        //this is expected to throw an exception since @ is not a legal
+        //character unless it is part of a string or comment
+        assertThrows(LexicalException.class, () -> {
+            @SuppressWarnings("unused")
+            IToken token = lexer.next();
+        });
     }
+
+    @Test
+    public void testingErrors4() throws LexicalException{
+        String input = "abc\"def\"hij123";
+        show(input);
+        ILexer lexer = getLexer(input);
+        checkIdent(lexer.next(), "abc");
+        checkToken(lexer.next(), IToken.Kind.STRING_LIT, "\"def\""); // test says expects def but shouldnt it be "def"
+        checkIdent(lexer.next(), "hij123");
+    }
+
     @Test
     void testEmpty() throws LexicalException {
         String input = "";
@@ -124,16 +149,15 @@ public class LexerTests {
 
     //Example for testing input with an illegal character
     @Test
-    void testError0() throws LexicalException {
-        String input = "abc\\g xyz";
+    void testError1() throws LexicalException {
+        String input = "123 \"this is a' string with a quote in the middle \"456";
         show(input);
         ILexer lexer = getLexer(input);
         //this check should succeed
-        checkIdent(lexer.next(), "abc");
-        assertThrows(LexicalException.class, () -> {
-            @SuppressWarnings("unused")
-            IToken token = lexer.next();
-        });
+        checkInt(lexer.next(), 123);
+        checkToken(lexer.next(), IToken.Kind.STRING_LIT, "\"this is a' string with a quote in the middle \"");
+        checkInt(lexer.next(), 456);
+
     }
 
 
@@ -410,7 +434,7 @@ public class LexerTests {
 
     @Test
     public void testEscapeSequences1() throws LexicalException {
-        String input = "   \" ...  \\\"  \\\'  \\\\  \"";
+        String input = "   \" ...  \\\"  \\\'  \\\\  \""; // " ... \" \' \\ "
         show(input);
         show("input chars= " + getASCII(input));
         ILexer lexer = getLexer(input);
@@ -455,17 +479,17 @@ public class LexerTests {
     @Test
     public void testCodeExample() throws LexicalException{
         String input = """
-  		string a = "hello\\nworld";
-  		int size = 11;
-  		string b = "";
-  		boolean display = true;
+  		string a = "hello\\nworld"
+  		int size = 11
+  		string b = ""
+  		boolean display = true
   		
 	 	for (int i = size - 1;i >= 0; i++) [
 	 		b = b + a[i];
 	 	]
 
   		if (display == true)
-  		print(b);
+  		print(b)
 	  	""";
         show(input);
         ILexer lexer = getLexer(input);
