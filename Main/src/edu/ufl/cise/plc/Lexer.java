@@ -24,6 +24,7 @@ enum State {
 
 public class Lexer implements ILexer {
 
+    private boolean backSlashFlagForQuote;
     Map<String, IToken.Kind> reservedMap = new HashMap<>();
     public ArrayList<IToken> holdingTokens = new ArrayList<>();
     char[] chars;
@@ -312,11 +313,12 @@ public class Lexer implements ILexer {
                     case HAVE_QUOTE -> {
                         switch (ch) {
                             case '\"' -> {
-                                // TODO: Figure out a way to check if it is the end of a string lit as you can have quotes inside the start and end quote
                                 holdingToken += "\"";
-                                holdingTokens.add(new Token(IToken.Kind.STRING_LIT, holdingToken, startPos, 1, lineNumber));
-                                holdingToken = "";
-                                state = State.START;
+                                if(!backSlashFlagForQuote){
+                                    holdingTokens.add(new Token(IToken.Kind.STRING_LIT, holdingToken, startPos, 1, lineNumber));
+                                    holdingToken = "";
+                                    state = State.START;
+                                }
                                 pos++;
                             }
                             case '~' ->{
@@ -325,6 +327,7 @@ public class Lexer implements ILexer {
                                 }
                             }
                             default -> {
+                                backSlashFlagForQuote = ch == '\\' && chars[pos + 1] == '\"';
                                 holdingToken += ch;
                                 pos++;
                             }
@@ -368,26 +371,29 @@ public class Lexer implements ILexer {
                                 holdingToken += ch;
                                 pos++;
                                 holdingTokens.add(new Token(IToken.Kind.LARROW, holdingToken, startPos, 1, lineNumber));
+                                holdingToken ="";
                                 state = State.START;
                             }
                             case '<' -> {
                                 holdingToken += ch;
                                 pos++;
                                 holdingTokens.add(new Token(IToken.Kind.LANGLE, holdingToken, startPos, 1, lineNumber));
+                                holdingToken ="";
                                 state = State.START;
                             }
                             case '=' -> {
                                 holdingToken += ch;
                                 pos++;
                                 holdingTokens.add(new Token(IToken.Kind.LE, holdingToken, startPos, 1, lineNumber));
+                                holdingToken ="";
                                 state = State.START;
                             }
                             default -> {
                                 holdingTokens.add(new Token(IToken.Kind.LT, holdingToken, startPos, 1, lineNumber));
+                                holdingToken ="";
                                 state = State.START;
                             }
                         }
-
                     }
                     // can have >, or >>, or >=
                     case HAVE_GT -> {
@@ -397,16 +403,19 @@ public class Lexer implements ILexer {
                                 holdingToken += ch;
                                 pos++;
                                 holdingTokens.add(new Token(IToken.Kind.RANGLE, holdingToken, startPos, 1, lineNumber));
+                                holdingToken ="";
                                 state = State.START;
                             }
                             case '=' -> {
                                 holdingToken += ch;
                                 pos++;
                                 holdingTokens.add(new Token(IToken.Kind.GE, holdingToken, startPos, 1, lineNumber));
+                                holdingToken ="";
                                 state = State.START;
                             }
                             default -> {
                                 holdingTokens.add(new Token(IToken.Kind.GT, holdingToken, startPos, 1, lineNumber));
+                                holdingToken ="";
                                 state = State.START;
                             }
                         }
@@ -459,7 +468,6 @@ public class Lexer implements ILexer {
                             pos++;
                         } else {
                             holdingTokens.add(new Token(reservedMap.getOrDefault(holdingToken, IToken.Kind.IDENT), holdingToken, startPos, holdingToken.length(), lineNumber));
-
                             if (lineNumber > 0) {
                                 startPos = lineBasePos;
                             } else {
