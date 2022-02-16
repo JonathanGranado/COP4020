@@ -105,8 +105,6 @@ public class Parser implements IParser {
                 t.getKind() == IToken.Kind.NOT_EQUALS || t.getKind() == IToken.Kind.LE || t.getKind() == IToken.Kind.GE) {
             IToken op = t;
             consume();
-            System.out.println(t.getText() + " after consume inside comparison");
-
             right = AdditiveExpr();
             left = new BinaryExpr(firstToken, left, op, right);
         }
@@ -139,8 +137,7 @@ public class Parser implements IParser {
         while (t.getKind() == IToken.Kind.MOD || t.getKind() == IToken.Kind.TIMES || t.getKind() == IToken.Kind.DIV) {
             IToken op = t;
             consume();
-            right = UnaryExpr();   // here we come back from checking 3 + so now we are looking at (4+5) in the unaryExpr call
-            // left = 3 op = + right = unaryExpr
+            right = UnaryExpr();
             left = new BinaryExpr(firstToken, left, op, right);
         }
         return left;
@@ -232,7 +229,6 @@ public class Parser implements IParser {
 
     void consume() {
         t = lex.next();
-        System.out.println(t.getText() + " this is in the consume function");
     }
 
     private boolean match(IToken.Kind kind) {
