@@ -14,12 +14,15 @@ public class StringLitExpr extends Expr{
 		return v.visitStringLitExpr(this,arg);
 	}
 	
-	public String getValue() throws LexicalException {
+	public String getValue() {
 		return firstToken.getStringValue();
 	}
 
 	@Override
 	public String toString() {
+		return "StringLitExpr [getValue()=" + getValue() + "]";
+	}
+	/*
 		try {
 			return "StringLitExpr [getValue()=" + getValue() + "]";
 		} catch (LexicalException e) {
@@ -27,5 +30,6 @@ public class StringLitExpr extends Expr{
 		}
 		return "Error with getting String";
 	}
+	 */
 
 }

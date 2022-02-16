@@ -72,7 +72,7 @@ public interface IToken {
 
     //returns the String represented by the characters of this token if kind is STRING_LIT
     //The delimiters should be removed and escape sequences replaced by the characters they represent.
-    public String getStringValue() throws LexicalException;
+    public String getStringValue();
 
 
 }

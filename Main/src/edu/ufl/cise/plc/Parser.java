@@ -6,7 +6,7 @@ public class Parser implements IParser {
     Lexer lex;
     IToken t;
 
-    public Parser(String input) throws LexicalException {
+    public Parser(String input) throws PLCException {
         lex = new Lexer(input);
         t = lex.next();
     }
@@ -18,12 +18,12 @@ public class Parser implements IParser {
         return e;
     }
 
-    public Expr expr() throws SyntaxException {
+    public Expr expr() throws PLCException {
         Expr e = ConditionalExpr();
         return e;
     }
 
-    public Expr ConditionalExpr() throws SyntaxException {
+    public Expr ConditionalExpr() throws PLCException {
         IToken firstToken = t;
         Expr condition;
         Expr trueCase;
@@ -63,7 +63,7 @@ public class Parser implements IParser {
     }
 
 
-    public Expr LogicalOrExpr() throws SyntaxException {
+    public Expr LogicalOrExpr() throws PLCException {
         IToken firstToken = t;
         Expr left = null;
         Expr right = null;
@@ -79,7 +79,7 @@ public class Parser implements IParser {
         return left;
     }
 
-    public Expr LogicalAndExpr() throws SyntaxException {
+    public Expr LogicalAndExpr() throws PLCException {
         IToken firstToken = t;
         Expr left = null;
         Expr right = null;
@@ -95,7 +95,7 @@ public class Parser implements IParser {
         return left;
     }
 
-    public Expr ComparisonExpr() throws SyntaxException {
+    public Expr ComparisonExpr() throws PLCException {
         IToken firstToken = t;
         Expr left;
         Expr right;
@@ -111,7 +111,7 @@ public class Parser implements IParser {
         return left;
     }
 
-    public Expr AdditiveExpr() throws SyntaxException {
+    public Expr AdditiveExpr() throws PLCException {
         IToken firstToken = t;
         Expr left = null;
         Expr right = null;
@@ -127,7 +127,7 @@ public class Parser implements IParser {
         return left;
     }
 
-    public Expr MultiplicativeExpr() throws SyntaxException {
+    public Expr MultiplicativeExpr() throws PLCException {
         IToken firstToken = t;
         Expr left = null;
         Expr right = null;
@@ -143,7 +143,7 @@ public class Parser implements IParser {
         return left;
     }
 
-    public Expr UnaryExpr() throws SyntaxException {
+    public Expr UnaryExpr() throws PLCException {
         IToken firstToken = t;
         Expr x = null;
         IToken.Kind tempKind = firstToken.getKind();
@@ -158,7 +158,7 @@ public class Parser implements IParser {
         return x;
     }
 
-    public Expr UnaryExprPostFix() throws SyntaxException {
+    public Expr UnaryExprPostFix() throws PLCException {
         IToken firstToken = t;
         Expr left = null;
         PixelSelector right = null;
@@ -174,7 +174,7 @@ public class Parser implements IParser {
         return new UnaryExprPostfix(firstToken, left, right);
     }
 
-    public PixelSelector PixelSelector() throws SyntaxException {
+    public PixelSelector PixelSelector() throws PLCException {
         IToken firstToken = t;
         Expr x = null;
         Expr y = null;
@@ -198,7 +198,7 @@ public class Parser implements IParser {
     }
     // first grammar
 
-    public Expr PrimaryExpr() throws SyntaxException {
+    public Expr PrimaryExpr() throws PLCException {
         IToken firstToken = t;
         Expr e = null;
         if (firstToken.getKind() == IToken.Kind.STRING_LIT) {
