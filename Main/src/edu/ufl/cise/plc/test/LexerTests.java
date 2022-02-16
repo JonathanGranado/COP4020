@@ -451,6 +451,7 @@ public class LexerTests {
         assertEquals(expectedText,text);
     }
 
+
     @Test
     public void testBang() throws LexicalException{
         String input = """
