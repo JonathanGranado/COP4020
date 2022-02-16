@@ -105,6 +105,8 @@ public class Parser implements IParser {
                 t.getKind() == IToken.Kind.NOT_EQUALS || t.getKind() == IToken.Kind.LE || t.getKind() == IToken.Kind.GE) {
             IToken op = t;
             consume();
+            System.out.println(t.getText() + " after consume inside comparison");
+
             right = AdditiveExpr();
             left = new BinaryExpr(firstToken, left, op, right);
         }
@@ -137,7 +139,8 @@ public class Parser implements IParser {
         while (t.getKind() == IToken.Kind.MOD || t.getKind() == IToken.Kind.TIMES || t.getKind() == IToken.Kind.DIV) {
             IToken op = t;
             consume();
-            right = UnaryExpr();
+            right = UnaryExpr();   // here we come back from checking 3 + so now we are looking at (4+5) in the unaryExpr call
+            // left = 3 op = + right = unaryExpr
             left = new BinaryExpr(firstToken, left, op, right);
         }
         return left;
@@ -204,7 +207,6 @@ public class Parser implements IParser {
         if (firstToken.getKind() == IToken.Kind.STRING_LIT) {
             e = new StringLitExpr(firstToken);
             // consume();
-            //TODO: Breaks here, test 6
         } else if (firstToken.getKind() == IToken.Kind.BOOLEAN_LIT) {
             e = new BooleanLitExpr(firstToken);
             //consume();
@@ -216,17 +218,13 @@ public class Parser implements IParser {
             // consume();
         } else if (firstToken.getKind() == IToken.Kind.IDENT) {
             e = new IdentExpr(firstToken);
-            //  consume();
+             //consume();
         } else if (firstToken.getKind() == IToken.Kind.LPAREN) {
             consume();
             e = expr();
-            if (match(IToken.Kind.RPAREN)) {
-                consume();
-            } else {
-                error("Expected RPAREN");
-            }
+            if (!match(IToken.Kind.RPAREN)) error("Missing right parentheses");
         } else {
-            error("Expected Left Paren ");
+            error("Incorrect Syntax, missing the rest of if else statement");
         }
         return e;
     }
@@ -234,6 +232,7 @@ public class Parser implements IParser {
 
     void consume() {
         t = lex.next();
+        System.out.println(t.getText() + " this is in the consume function");
     }
 
     private boolean match(IToken.Kind kind) {
