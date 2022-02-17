@@ -1,5 +1,4 @@
 package edu.ufl.cise.plc;
-
 import edu.ufl.cise.plc.ast.*;
 
 public class Parser implements IParser {
@@ -10,7 +9,6 @@ public class Parser implements IParser {
         lex = new Lexer(input);
         t = lex.next();
     }
-
 
     @Override
     public ASTNode parse() throws PLCException {
@@ -193,6 +191,7 @@ public class Parser implements IParser {
     public Expr PrimaryExpr() throws PLCException {
         IToken firstToken = t;
         Expr e = null;
+        checkingForImplicitOperation(firstToken);
         if (firstToken.getKind() == IToken.Kind.STRING_LIT) {
             e = new StringLitExpr(firstToken);
         } else if (firstToken.getKind() == IToken.Kind.BOOLEAN_LIT) {
@@ -212,8 +211,6 @@ public class Parser implements IParser {
         }
         return e;
     }
-
-
     void consume() {
         t = lex.next();
     }
@@ -225,17 +222,13 @@ public class Parser implements IParser {
     private void error(String m) throws PLCException {
         throw new SyntaxException(m);
     }
+
+    private void checkingForImplicitOperation(IToken firstToken) throws PLCException{
+        if(firstToken.getKind() == IToken.Kind.IDENT || firstToken.getKind() == IToken.Kind.INT_LIT || firstToken.getKind() == IToken.Kind.FLOAT_LIT){
+            if(lex.peek().getKind() == IToken.Kind.LPAREN){
+                throw new SyntaxException("Not a legal expression. Implicit multiplication is not allowed, please add a *");
+            }
+        }
+    }
+
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
