@@ -14,13 +14,11 @@ public class Parser implements IParser {
 
     @Override
     public ASTNode parse() throws PLCException {
-        Expr e = expr();
-        return e;
+        return expr();
     }
 
     public Expr expr() throws PLCException {
-        Expr e = ConditionalExpr();
-        return e;
+        return ConditionalExpr();
     }
 
     public Expr ConditionalExpr() throws PLCException {
@@ -165,12 +163,9 @@ public class Parser implements IParser {
         left = this.PrimaryExpr();
         consume();
         right = this.PixelSelector();
-        // if it has no pixel selector and right is null, we just return left
         if (right == null) {
             return left;
         }
-        // if it has a Pixel Selector we create an object so we can return
-        // both PrimaryExpr and PixelSelector
         return new UnaryExprPostfix(firstToken, left, right);
     }
 
@@ -185,8 +180,6 @@ public class Parser implements IParser {
             consume();
             x = AdditiveExpr();
         }
-        //TODO: I changed the firstToken here to t so that the change from consume actually
-        // does something, maybe we should use match
         if (t.getKind() == IToken.Kind.COMMA) {
             consume();
             y = AdditiveExpr();
@@ -196,26 +189,20 @@ public class Parser implements IParser {
         }
         return new PixelSelector(firstToken, x, y);
     }
-    // first grammar
 
     public Expr PrimaryExpr() throws PLCException {
         IToken firstToken = t;
         Expr e = null;
         if (firstToken.getKind() == IToken.Kind.STRING_LIT) {
             e = new StringLitExpr(firstToken);
-            // consume();
         } else if (firstToken.getKind() == IToken.Kind.BOOLEAN_LIT) {
             e = new BooleanLitExpr(firstToken);
-            //consume();
         } else if (firstToken.getKind() == IToken.Kind.INT_LIT) {
             e = new IntLitExpr(firstToken);
-            // consume();
         } else if (firstToken.getKind() == IToken.Kind.FLOAT_LIT) {
             e = new FloatLitExpr(firstToken);
-            // consume();
         } else if (firstToken.getKind() == IToken.Kind.IDENT) {
             e = new IdentExpr(firstToken);
-             //consume();
         } else if (firstToken.getKind() == IToken.Kind.LPAREN) {
             consume();
             e = expr();
@@ -235,7 +222,7 @@ public class Parser implements IParser {
         return t.getKind() == kind;
     }
 
-    private void error(String m) throws SyntaxException {
+    private void error(String m) throws PLCException {
         throw new SyntaxException(m);
     }
 }
