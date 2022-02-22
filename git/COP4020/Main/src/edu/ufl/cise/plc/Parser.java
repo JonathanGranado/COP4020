@@ -1,6 +1,9 @@
 package edu.ufl.cise.plc;
 import edu.ufl.cise.plc.ast.*;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class Parser implements IParser {
     Lexer lex;
     IToken t;
@@ -12,7 +15,99 @@ public class Parser implements IParser {
 
     @Override
     public ASTNode parse() throws PLCException {
-        return expr();
+        return Program();
+    }
+
+    public Program Program() throws PLCException {
+        IToken firstToken = t;
+        Types.Type returnType = null;
+        String name = null;
+        List<NameDef> params = new ArrayList<NameDef>();
+        List<ASTNode> decsAndStatements = new ArrayList<ASTNode>();
+        NameDef left;
+        NameDef right;
+        Declaration decl;
+        Statement state = null;
+
+        if (t.getKind() == IToken.Kind.TYPE || t.getKind() == IToken.Kind.KW_VOID) {
+            if (match(IToken.Kind.TYPE)) {
+                returnType = Types.Type.toType(t.getText());
+            }
+            if (match(IToken.Kind.KW_VOID)) {
+                returnType = Types.Type.toType("void");
+            }
+            consume();
+
+            if (match(IToken.Kind.IDENT)) {
+                name = t.getText();
+                consume();
+                if (match(IToken.Kind.LPAREN)) {
+                    consume();
+                    if (!match(IToken.Kind.RPAREN)) {
+                        left = NameDef();
+                        consume();
+                        while (t.getKind() == IToken.Kind.COMMA) {
+                            consume();
+                            right = NameDef();
+                            params.add(right);
+                        }
+                    } else {
+                        consume();
+                        if (t.getText() != "~") {
+                            decl = Declaration();
+                            state = Statement();
+                            while (decl != null || state != null) {
+                                decl = Declaration();
+                                state = Statement();
+                                decsAndStatements.add(decl);
+                                decsAndStatements.add(state);
+                                if (!match(IToken.Kind.SEMI)) {
+                                    error("Error inside of Declaration or Statement *");
+                                }
+                            }
+                            return new Program(firstToken, returnType, name, params, decsAndStatements);
+                        }
+                        return new Program(firstToken, returnType, name, params, decsAndStatements);
+                    }
+                }
+            }
+        }
+        throw new SyntaxException("Something wrong");
+    }
+
+    public NameDef NameDef() throws PLCException {
+        IToken firstToken = t;
+        Dimension left;
+
+        if(match(IToken.Kind.TYPE)){
+            IToken kind = firstToken;
+            consume();
+            if(match(IToken.Kind.IDENT)){
+                return new NameDef(firstToken, kind.getText(), t.getText());
+            }else{
+                left = Dimension();
+                consume();
+                if(match(IToken.Kind.IDENT)){
+                    return new NameDefWithDim(firstToken, kind.getText(), t.getText(), left);
+                }
+            }
+        }
+        throw new SyntaxException("Error in NameDef");
+    }
+
+    public Declaration Declaration() throws PLCException {
+        IToken firstToken = t;
+        Expr right = null;
+        NameDef left = null;
+
+        left = NameDef();
+        if(firstToken.getKind() == IToken.Kind.ASSIGN || firstToken.getKind() == IToken.Kind.LARROW){
+            IToken op = firstToken;
+            consume();
+            right = expr();
+            return new VarDeclaration(firstToken, left, op, right);
+        }
+        return new VarDeclaration(firstToken, left, null, null);
     }
 
     public Expr expr() throws PLCException {
@@ -52,7 +147,6 @@ public class Parser implements IParser {
                 error("Was expecting a Left Paren");
             }
         } else {
-            // TODO: error handling
             return LogicalOrExpr();
         }
         return result;
@@ -191,6 +285,9 @@ public class Parser implements IParser {
     public Expr PrimaryExpr() throws PLCException {
         IToken firstToken = t;
         Expr e = null;
+        Expr red = null;
+        Expr green = null;
+        Expr blue = null;
         if (firstToken.getKind() == IToken.Kind.STRING_LIT) {
             e = new StringLitExpr(firstToken);
         } else if (firstToken.getKind() == IToken.Kind.BOOLEAN_LIT) {
@@ -201,15 +298,105 @@ public class Parser implements IParser {
             e = new FloatLitExpr(firstToken);
         } else if (firstToken.getKind() == IToken.Kind.IDENT) {
             e = new IdentExpr(firstToken);
+        } else if (firstToken.getKind() == IToken.Kind.COLOR_CONST) {
+            e = new ColorConstExpr(firstToken);
+        } else if (firstToken.getKind() == IToken.Kind.KW_CONSOLE) {
+            e = new ConsoleExpr(firstToken);
         } else if (firstToken.getKind() == IToken.Kind.LPAREN) {
+                consume();
+                e = expr();
+                if (!match(IToken.Kind.RPAREN)) error("Missing right parentheses");
+        } else if (firstToken.getKind() == IToken.Kind.LANGLE) {
             consume();
-            e = expr();
-            if (!match(IToken.Kind.RPAREN)) error("Missing right parentheses");
+            red = expr();
+            if (match(IToken.Kind.COMMA)) consume();
+            green = expr();
+            if(match(IToken.Kind.COMMA)) consume();
+            blue = expr();
+            if(match(IToken.Kind.RANGLE)){
+                return new ColorExpr(firstToken, red, green, blue);
+            }else{
+                error("Not a complete color expression");
+            }
         } else {
-            error("Incorrect Syntax, missing the rest of if else statement");
+            error("Incorrect Syntax");
         }
         return e;
     }
+
+
+    public Dimension Dimension() throws PLCException {
+        IToken firstToken = t;
+        Expr x = null;
+        Expr y = null;
+
+        if (firstToken.getKind() != IToken.Kind.LSQUARE) {
+            return null;
+        } else {
+            consume();
+            x = AdditiveExpr();
+        }
+        if (t.getKind() == IToken.Kind.COMMA) {
+            consume();
+            y = AdditiveExpr();
+            if (t.getKind() == IToken.Kind.RSQUARE) {
+                consume();
+            }
+        }
+        return new Dimension(firstToken, x, y);
+    }
+
+    public Statement Statement() throws PLCException {
+        IToken firstToken = t;
+        Expr x = null;
+        Expr y = null;
+
+        if (firstToken.getKind() != IToken.Kind.IDENT) {
+            if (match(IToken.Kind.KW_WRITE)) {
+                consume();
+                x = expr();
+                if (match(IToken.Kind.RARROW)) {
+                    consume();
+                    y = expr();
+                }
+                return new WriteStatement(firstToken, x, y);
+            }
+            if(match(IToken.Kind.RETURN)){
+                consume();
+                x = expr();
+                return new ReturnStatement(firstToken, x);
+            }else{
+                throw new SyntaxException("This is not a valid statement");
+            }
+        }else{
+            String name = firstToken.getText();
+            consume();
+            PixelSelector temp = this.PixelSelector();
+            if(temp == null){
+                if(match(IToken.Kind.EQUALS)){
+                    consume();
+                    x = expr();
+                    return new AssignmentStatement(firstToken, name, null, x);
+                }else if(match(IToken.Kind.LARROW)){
+                    consume();
+                    x = expr();
+                    return new ReadStatement(firstToken, name, null, x);
+                }
+            }else{
+                if(match(IToken.Kind.EQUALS)){
+                    consume();
+                    x = expr();
+                    return new AssignmentStatement(firstToken, name, temp, x);
+                }else if(match(IToken.Kind.LARROW)){
+                    consume();
+                    x = expr();
+                    return new ReadStatement(firstToken, name, temp, x);
+                }
+            }
+        }
+        throw new SyntaxException("Incorrect statement");
+    }
+
     void consume() {
         t = lex.next();
     }
