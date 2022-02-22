@@ -1,7 +1,6 @@
 package edu.ufl.cise.plc.ast;
 
 import edu.ufl.cise.plc.IToken;
-import edu.ufl.cise.plc.LexicalException;
 
 public class StringLitExpr extends Expr{
 
@@ -22,14 +21,5 @@ public class StringLitExpr extends Expr{
 	public String toString() {
 		return "StringLitExpr [getValue()=" + getValue() + "]";
 	}
-	/*
-		try {
-			return "StringLitExpr [getValue()=" + getValue() + "]";
-		} catch (LexicalException e) {
-			e.printStackTrace();
-		}
-		return "Error with getting String";
-	}
-	 */
 
 }
