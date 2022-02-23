@@ -19,7 +19,8 @@ public class NameDef extends Declaration {
 		this.name = name.getText();
 		this.type = Type.toType(type.getText());
 	}
-	
+
+
 	public String getName() {
 		return name;
 	}
