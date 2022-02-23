@@ -45,15 +45,36 @@ public class Parser implements IParser {
                     consume();
                     if (!match(IToken.Kind.RPAREN)) {
                         left = NameDef();
+                        params.add(left);
                         consume();
                         while (t.getKind() == IToken.Kind.COMMA) {
                             consume();
                             right = NameDef();
                             params.add(right);
+                            consume();
+                        }
+                        if(match(IToken.Kind.RPAREN)){
+                            consume();
+                            if(t.getText().equals("~")){
+                                return new Program(firstToken, returnType, name, params, decsAndStatements);
+                            }else{
+                                decl = Declaration();
+                                state = Statement();
+                                while (decl != null || state != null) {
+                                    decl = Declaration();
+                                    state = Statement();
+                                    decsAndStatements.add(decl);
+                                    decsAndStatements.add(state);
+                                    if (!match(IToken.Kind.SEMI)) {
+                                        error("Error inside of Declaration or Statement *");
+                                    }
+                                }
+                                return new Program(firstToken, returnType, name, params, decsAndStatements);
+                            }
                         }
                     } else {
                         consume();
-                        if (t.getText() != "~") {
+                        if (!t.getText().equals("~")) {
                             decl = Declaration();
                             state = Statement();
                             while (decl != null || state != null) {
