@@ -1,7 +1,6 @@
 package edu.ufl.cise.plc.ast;
 
 import edu.ufl.cise.plc.IToken;
-import edu.ufl.cise.plc.ast.Types.Type;
 
 public class NameDefWithDim extends NameDef{
 
