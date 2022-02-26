@@ -56,19 +56,17 @@ public class Parser implements IParser {
                     }
                     if(match(IToken.Kind.EOF)){
                         // parameters now check if theres declaration or statement
-                        return new Program(firstToken, returnType, name, params, null);
+                        return new Program(firstToken, returnType, name, params, decsAndStatements);
                     }else {
                         while (!match(IToken.Kind.EOF)) {
                             if (match(IToken.Kind.TYPE)) {
                                 decl = Declaration();
-                                consume();
                                 if (match(IToken.Kind.SEMI)) {
                                     decsAndStatements.add(decl);
                                     consume();
                                 }
                             } else {
                                 state = Statement();
-                                consume();
                                 if (match(IToken.Kind.SEMI)) {
                                     decsAndStatements.add(state);
                                     consume();
@@ -80,22 +78,22 @@ public class Parser implements IParser {
                 }
                 consume(); // no parameters in method (IDENT)
                 if (match(IToken.Kind.EOF)){ // There is no declaration or statement
-                    return new Program(firstToken, returnType, name, null, null);
+                    return new Program(firstToken, returnType, name, params, decsAndStatements);
                 }else {
                     while (!match(IToken.Kind.EOF)) {
                         if (match(IToken.Kind.TYPE)) {
                             decl = Declaration();
-                            consume();
                             if (match(IToken.Kind.SEMI)) {
                                 decsAndStatements.add(decl);
                                 consume();
                             }
                         } else {
                             state = Statement();
-                            consume();
                             if (match(IToken.Kind.SEMI)) {
                                 decsAndStatements.add(state);
                                 consume();
+                            }else{
+                                throw new SyntaxException("Missing a semi colon after " + state.getText());
                             }
                         }
                     }
@@ -110,6 +108,23 @@ public class Parser implements IParser {
     }
 
 
+    public Declaration Declaration() throws PLCException {
+        IToken firstToken = t;
+        Expr right = null;
+        NameDef left = null;
+// Declaration::=
+//	NameDef (('=' | '<-') Expr)?
+        left = NameDef();
+        consume();
+        if(t.getKind() == IToken.Kind.ASSIGN || t.getKind() == IToken.Kind.LARROW){
+            IToken op = t;
+            consume();
+            right = expr();
+            return new VarDeclaration(firstToken, left, op, right);
+        }
+        return new VarDeclaration(firstToken, left, null, null);
+    }
+
     public NameDef NameDef() throws PLCException {
         IToken firstToken = t;
         Dimension left;
@@ -121,28 +136,12 @@ public class Parser implements IParser {
                 return new NameDef(firstToken, kind.getText(), t.getText());
             }else{
                 left = Dimension();
-                consume();
                 if(match(IToken.Kind.IDENT)){
                     return new NameDefWithDim(firstToken, kind.getText(), t.getText(), left);
                 }
             }
         }
         throw new SyntaxException("Error in NameDef");
-    }
-
-    public Declaration Declaration() throws PLCException {
-        IToken firstToken = t;
-        Expr right = null;
-        NameDef left = null;
-
-        left = NameDef();
-        if(t.getKind() == IToken.Kind.ASSIGN || t.getKind() == IToken.Kind.LARROW){
-            IToken op = firstToken;
-            consume();
-            right = expr();
-            return new VarDeclaration(firstToken, left, op, right);
-        }
-        return new VarDeclaration(firstToken, left, null, null);
     }
 
     public Expr expr() throws PLCException {
@@ -305,11 +304,11 @@ public class Parser implements IParser {
             return null;
         } else {
             consume();
-            x = AdditiveExpr();
+            x = expr();
         }
         if (t.getKind() == IToken.Kind.COMMA) {
             consume();
-            y = AdditiveExpr();
+            y = expr();
             if (t.getKind() == IToken.Kind.RSQUARE) {
                 consume();
             }
@@ -369,11 +368,11 @@ public class Parser implements IParser {
             return null;
         } else {
             consume();
-            x = AdditiveExpr();
+            x = expr();
         }
         if (t.getKind() == IToken.Kind.COMMA) {
             consume();
-            y = AdditiveExpr();
+            y = expr();
             if (t.getKind() == IToken.Kind.RSQUARE) {
                 consume();
             }
@@ -406,26 +405,24 @@ public class Parser implements IParser {
         }else{
             String name = firstToken.getText();
             consume();
-            PixelSelector temp = this.PixelSelector();
-            if(temp == null){
-                if(match(IToken.Kind.EQUALS)){
-                    consume();
-                    x = expr();
-                    return new AssignmentStatement(firstToken, name, null, x);
-                }else if(match(IToken.Kind.LARROW)){
-                    consume();
-                    x = expr();
-                    return new ReadStatement(firstToken, name, null, x);
-                }
+            if(match(IToken.Kind.ASSIGN)){
+                consume();
+                x = expr();
+                return new AssignmentStatement(firstToken, name, null, x);
+            }else if(match(IToken.Kind.LARROW)){
+                consume();
+                x = expr();
+                return new ReadStatement(firstToken, name, null, x);
             }else{
-                if(match(IToken.Kind.EQUALS)){
+                PixelSelector pixel = PixelSelector();
+                if(match(IToken.Kind.ASSIGN)){
                     consume();
                     x = expr();
-                    return new AssignmentStatement(firstToken, name, temp, x);
+                    return new AssignmentStatement(firstToken, name, pixel, x);
                 }else if(match(IToken.Kind.LARROW)){
                     consume();
                     x = expr();
-                    return new ReadStatement(firstToken, name, temp, x);
+                    return new ReadStatement(firstToken, name, pixel, x);
                 }
             }
         }
