@@ -92,12 +92,18 @@ public class Parser implements IParser {
                             if (match(IToken.Kind.SEMI)) {
                                 decsAndStatements.add(state);
                                 consume();
+                            }else if(state == null){
+                                throw new SyntaxException("No declaration or statement after method name");
                             }else{
-                                throw new SyntaxException("Missing a semi colon after " + state.getText());
+                                throw new SyntaxException("Missing a semi colon at the end of a statement or declaration");
                             }
                         }
                     }
-                    return new Program(firstToken, returnType, name, params, decsAndStatements);
+                    if(match(IToken.Kind.EOF)){
+                        return new Program(firstToken, returnType, name, params, decsAndStatements);
+                    }else{
+                        throw new SyntaxException("Missing EOF token at the end of program");
+                    }
                 }
             }else{
                 error("No left paren after method name");
