@@ -2,7 +2,7 @@ package edu.ufl.cise.plc.ast;
 
 import edu.ufl.cise.plc.IToken;
 
-public class ColorConstExpr extends Expr{
+public class ColorConstExpr extends Expr {
 
 	public ColorConstExpr(IToken firstToken) {
 		super(firstToken);

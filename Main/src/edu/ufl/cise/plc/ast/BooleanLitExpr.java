@@ -2,7 +2,7 @@ package edu.ufl.cise.plc.ast;
 
 import edu.ufl.cise.plc.IToken;
 
-public class BooleanLitExpr extends Expr  {
+public class BooleanLitExpr extends Expr {
 	
 	public BooleanLitExpr(IToken firstToken){
 		super(firstToken);

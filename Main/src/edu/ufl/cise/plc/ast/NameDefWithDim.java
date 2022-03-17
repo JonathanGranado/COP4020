@@ -2,7 +2,7 @@ package edu.ufl.cise.plc.ast;
 
 import edu.ufl.cise.plc.IToken;
 
-public class NameDefWithDim extends NameDef{
+public class NameDefWithDim extends NameDef {
 
 	final Dimension dim;
 
@@ -10,12 +10,13 @@ public class NameDefWithDim extends NameDef{
 		super(firstToken,type, name);
 		this.dim = dim;
 	}
-
+	
 	public NameDefWithDim(IToken firstToken, IToken type, IToken name, Dimension dim) {
 		super(firstToken,type, name);
 		this.dim = dim;
 	}
 
+	@Override
 	public Dimension getDim() {
 		return dim;
 	}
@@ -24,11 +25,11 @@ public class NameDefWithDim extends NameDef{
 	public Object visit(ASTVisitor v, Object arg) throws Exception {
 		return v.visitNameDefWithDim(this,arg);
 	}
-
+	
 	@Override
 	public String toString() {
 		return "NameDefWithDim [dim=" + dim + ", name=" + name + ", type=" + type + "]";
 	}
-
-
+	
+	
 }
