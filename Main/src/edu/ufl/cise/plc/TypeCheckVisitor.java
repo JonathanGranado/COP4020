@@ -59,14 +59,17 @@ public class TypeCheckVisitor implements ASTVisitor {
 
 	@Override
 	public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws Exception {
-		//TODO:  implement this method
-		throw new UnsupportedOperationException("Unimplemented visit method.");
+		stringLitExpr.setType(Type.STRING);
+		return Type.STRING;
+//		throw new UnsupportedOperationException("Unimplemented visit method.");
 	}
 
 	@Override
 	public Object visitIntLitExpr(IntLitExpr intLitExpr, Object arg) throws Exception {
 		//TODO:  implement this method
-		throw new UnsupportedOperationException("Unimplemented visit method.");
+//		throw new UnsupportedOperationException("Unimplemented visit method.");
+		intLitExpr.setType(Type.INT);
+		return Type.INT;
 	}
 
 	@Override
@@ -78,7 +81,9 @@ public class TypeCheckVisitor implements ASTVisitor {
 	@Override
 	public Object visitColorConstExpr(ColorConstExpr colorConstExpr, Object arg) throws Exception {
 		//TODO:  implement this method
-		throw new UnsupportedOperationException("Unimplemented visit method.");
+//		throw new UnsupportedOperationException("Unimplemented visit method.");
+		colorConstExpr.setType(Type.COLOR);
+		return Type.COLOR;
 	}
 
 	@Override
