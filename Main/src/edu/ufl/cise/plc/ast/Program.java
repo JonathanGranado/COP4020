@@ -5,10 +5,10 @@ import edu.ufl.cise.plc.ast.Types.Type;
 
 import java.util.List;
 
-public class Program extends ASTNode {	
-	
+public class Program extends ASTNode {
+
 	final Type returnType;
-	final String name; 
+	final String name;
 	final List<NameDef> params;
 	final List<ASTNode> decsAndStatements;
 

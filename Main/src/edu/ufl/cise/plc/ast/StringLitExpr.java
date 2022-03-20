@@ -2,7 +2,7 @@ package edu.ufl.cise.plc.ast;
 
 import edu.ufl.cise.plc.IToken;
 
-public class StringLitExpr extends Expr{
+public class StringLitExpr extends Expr {
 
 	public StringLitExpr(IToken firstToken) {
 		super(firstToken);

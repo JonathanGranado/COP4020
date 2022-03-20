@@ -14,4 +14,8 @@ public class CompilerComponentFactory {
     public static IParser getParser(String input) throws PLCException{
         return new Parser(input);
     }
+
+    public static TypeCheckVisitor getTypeChecker() {
+        return new TypeCheckVisitor();
+    }
 }
