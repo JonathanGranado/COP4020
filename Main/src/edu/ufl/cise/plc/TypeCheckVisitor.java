@@ -163,28 +163,16 @@ public class TypeCheckVisitor implements ASTVisitor {
         return type;
     }
 
-    @Override // me
+    @Override
     public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws Exception {
         //TODO  implement this method
-        Type condition = (Type)conditionalExpr.getCondition().visit(this, arg);
-        Type trueCase = (Type)conditionalExpr.getTrueCase().visit(this, arg);
-        Type falseCase = (Type)conditionalExpr.getFalseCase().visit(this, arg);
-
-        check(condition == BOOLEAN, conditionalExpr, "type of condition must be boolean");
-        check(trueCase == falseCase, conditionalExpr, "type of true case must be equal to false case");
-        conditionalExpr.setType(trueCase);
-        return trueCase;
-//        throw new UnsupportedOperationException();
+        throw new UnsupportedOperationException();
     }
 
-    @Override // me
+    @Override
     public Object visitDimension(Dimension dimension, Object arg) throws Exception {
         //TODO  implement this method
-//        throw new UnsupportedOperationException();
-        Type left = (Type)dimension.getHeight().visit(this, arg);
-        Type right = (Type)dimension.getWidth().visit(this, arg);
-        check(left == Type.INT && right == Type.INT, dimension, "both expressions must have type INT");
-        return left;
+        throw new UnsupportedOperationException();
     }
 
     @Override
@@ -222,7 +210,7 @@ public class TypeCheckVisitor implements ASTVisitor {
         return null;
     }
 
-    @Override // gabe
+    @Override
     public Object visitReadStatement(ReadStatement readStatement, Object arg) throws Exception {
             String name = readStatement.getName();
             Declaration dec = symbolTable.lookup(name);
@@ -233,18 +221,19 @@ public class TypeCheckVisitor implements ASTVisitor {
             return null;
     }
 
-    @Override // me
+    @Override
     public Object visitVarDeclaration(VarDeclaration declaration, Object arg) throws Exception {
         //TODO:  implement this method
         throw new UnsupportedOperationException("Unimplemented visit method.");
     }
 
-    @Override // me
+    @Override
     public Object visitProgram(Program program, Object arg) throws Exception {
         //TODO:  this method is incomplete, finish it.
 
         //Save root of AST so return type can be accessed in return statements
         root = program;
+
         //Check declarations and statements
         List<ASTNode> decsAndStatements = program.getDecsAndStatements();
         for (ASTNode node : decsAndStatements) {
@@ -253,13 +242,13 @@ public class TypeCheckVisitor implements ASTVisitor {
         return program;
     }
 
-    @Override // me
+    @Override
     public Object visitNameDef(NameDef nameDef, Object arg) throws Exception {
         //TODO:  implement this method
         throw new UnsupportedOperationException();
     }
 
-    @Override // gabe
+    @Override
     public Object visitNameDefWithDim(NameDefWithDim nameDefWithDim, Object arg) throws Exception {
         symbolTable.insert(nameDefWithDim.getName(), nameDefWithDim);
         return null;
