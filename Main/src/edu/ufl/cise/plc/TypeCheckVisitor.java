@@ -227,6 +227,7 @@ public class TypeCheckVisitor implements ASTVisitor {
         // look up name in symbol table, declare variable
         String name = assignmentStatement.getName();
         Declaration lhsDeclaration = symbolTable.lookup(name);
+        check(lhsDeclaration != null, assignmentStatement, "undeclared variable " + name);
         // get types
         Type rhsType = (Type) assignmentStatement.getExpr().visit(this, arg);
         Type lhsType = lhsDeclaration.getType();
@@ -236,11 +237,27 @@ public class TypeCheckVisitor implements ASTVisitor {
         if (lhsType != IMAGE && rhsType != lhsType) {
             check(assignmentCompatible(lhsType, rhsType), assignmentStatement, "incompatible types in assignment");
             assignmentStatement.getExpr().setCoerceTo(lhsType);
-            //TODO: figure out if we have to do something here
+
         } else if (lhsType == IMAGE && !hasSelector && rhsType != IMAGE) {
             check(assignmentCompatible(lhsType, rhsType), assignmentStatement, "incompatible types in assignment");
-            if (rhsType==INT) assignmentStatement.getExpr().setCoerceTo(COLOR);
-            if (rhsType==FLOAT) assignmentStatement.getExpr().setCoerceTo(COLORFLOAT);
+            if (rhsType == INT) assignmentStatement.getExpr().setCoerceTo(COLOR);
+            if (rhsType == FLOAT) assignmentStatement.getExpr().setCoerceTo(COLORFLOAT);
+
+        } else if (lhsType == IMAGE && hasSelector) {
+
+            PixelSelector selector = assignmentStatement.getSelector();
+            IdentExpr x = (IdentExpr) assignmentStatement.getSelector().getX();
+            IdentExpr y = (IdentExpr) assignmentStatement.getSelector().getY();
+            check((x.getType() == INT && y.getType() == INT), assignmentStatement, "x,y must be INT");
+            // declare and initialize local variables
+            Declaration xDec = symbolTable.lookup(x.getText());
+            Declaration yDec = symbolTable.lookup(y.getText());
+            xDec.setInitialized(true);
+            yDec.setInitialized(true);
+
+            check(assignmentCompatible(lhsType, rhsType), assignmentStatement, "incompatible rhs type in assignment");
+            assignmentStatement.getExpr().setCoerceTo(COLOR);
+
         }
         return null;
     }
@@ -297,6 +314,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 
     @Override
     public Object visitNameDefWithDim(NameDefWithDim nameDefWithDim, Object arg) throws Exception {
+        // TODO: check that dimensions are int
         symbolTable.insert(nameDefWithDim.getName(), nameDefWithDim);
         return null;
     }
