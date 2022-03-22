@@ -8,7 +8,6 @@ public abstract class  Declaration extends ASTNode {
 	public Declaration(IToken firstToken) {
 		super(firstToken);
 	}
-	
 
 	boolean initialized = false;
 
