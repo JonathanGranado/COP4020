@@ -9,7 +9,7 @@ public class SymbolTable {
 
     //TODO:  Implement a symbol table class that is appropriate for this language.
     HashMap<String, Declaration> table = new HashMap<>();
-    SymbolTable symbolTable = new SymbolTable();
+
 
     public boolean insert(String name, Declaration declaration) {
         return (table.putIfAbsent(name, declaration) == null);
