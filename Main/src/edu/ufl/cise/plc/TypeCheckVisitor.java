@@ -139,6 +139,8 @@ public class TypeCheckVisitor implements ASTVisitor {
                     resultType = COLORFLOAT;
                 else if (leftType == IMAGE && rightType == IMAGE) resultType = IMAGE;
                 else if (leftType == IMAGE && rightType == INT) resultType = IMAGE;
+                else if ((leftType == INT || leftType == COLOR) && (rightType == INT || rightType == COLOR)) resultType = COLOR;
+                else if ((leftType == FLOAT || leftType == COLORFLOAT) && (rightType == FLOAT || rightType == COLORFLOAT)) resultType = COLORFLOAT;
             }
             case GE, LT, GT, LE -> {
                 if (leftType == INT && rightType == INT) resultType = BOOLEAN;
@@ -189,8 +191,13 @@ public class TypeCheckVisitor implements ASTVisitor {
     //This method several cases--you don't have to implement them all at once.
     //Work incrementally and systematically, testing as you go.
     public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, Object arg) throws Exception {
-        //TODO:  implement this method
-        throw new UnsupportedOperationException("Unimplemented visit method.");
+        String name = assignmentStatement.getName();
+        Declaration declaration = symbolTable.lookup(name);
+        check(declaration.isInitialized(), assignmentStatement, "Uninitialized variable " + name);
+        Type assignmentType = (Type) assignmentStatement.getExpr().visit(this, arg);
+        check(assignmentType == declaration.getType(), assignmentStatement, "incompatible types in assignment");
+        declaration.setInitialized(true);
+        return null;
     }
 
     @Override
@@ -205,8 +212,13 @@ public class TypeCheckVisitor implements ASTVisitor {
 
     @Override
     public Object visitReadStatement(ReadStatement readStatement, Object arg) throws Exception {
-        //TODO:  implement this method
-        throw new UnsupportedOperationException("Unimplemented visit method.");
+            String name = readStatement.getName();
+            Declaration dec = symbolTable.lookup(name);
+            check(dec.isInitialized(), readStatement, "uninitialized variable " + name);
+            Type type = (Type) readStatement.getSource().visit(this, arg);
+            check(type == dec.getType(), readStatement, "incompatible types assignment");
+            dec.setInitialized(true);
+            return null;
     }
 
     @Override
@@ -238,8 +250,8 @@ public class TypeCheckVisitor implements ASTVisitor {
 
     @Override
     public Object visitNameDefWithDim(NameDefWithDim nameDefWithDim, Object arg) throws Exception {
-        //TODO:  implement this method
-        throw new UnsupportedOperationException();
+        symbolTable.insert(nameDefWithDim.getName(), nameDefWithDim);
+        return null;
     }
 
     @Override
