@@ -184,7 +184,6 @@ public class TypeCheckVisitor implements ASTVisitor {
         String name = identExpr.getText();
         Declaration dec = symbolTable.lookup(name);
         check(dec != null, identExpr, "undefined identifier " + name);
-        check(dec.isInitialized(), identExpr, "using uninitialized variable");
         identExpr.setDec(dec);
         Type type = dec.getType();
         identExpr.setType(type);
@@ -298,16 +297,47 @@ public class TypeCheckVisitor implements ASTVisitor {
         return null;
     }
 
+    private Kind getOp(VarDeclaration declaration){
+        Token op = (Token) declaration.getOp();
+        return op.getKind();
+    }
+
     @Override
     public Object visitVarDeclaration(VarDeclaration declaration, Object arg) throws Exception {
         //TODO:  implement this method
-        throw new UnsupportedOperationException("Unimplemented visit method.");
+        visitNameDef(declaration.getNameDef(), arg);
+//        String name = declaration.getName();
+//        boolean inserted = symbolTable.insert(name, declaration);
+//        check(inserted, declaration, "variable " + name + " already declared");
+
+        Expr rhs = declaration.getExpr();
+        if(rhs == null){
+            throw new TypeCheckException("variable was not initialized");
+        }
+        Type rhsType = (Type)rhs.visit(this, arg);
+        if(getOp(declaration) == Kind.ASSIGN){
+            check(assignmentCompatible(declaration.getType(), rhsType), declaration, "type of expression and declared type do not match");
+            declaration.setInitialized(true);
+            rhs.setCoerceTo(declaration.getType());
+        }
+        else if(getOp(declaration) == Kind.LARROW){
+           check(rhsType == CONSOLE || rhsType == STRING, declaration, "type of expression and declared type do not match");
+           declaration.setInitialized(true);
+        }else{
+            throw new TypeCheckException("something here idk");
+        }
+        return declaration;
     }
 
     @Override
     public Object visitProgram(Program program, Object arg) throws Exception {
         //TODO:  this method is incomplete, finish it.
 
+        List<NameDef> params = program.getParams();
+        for(NameDef param: params){
+            check(symbolTable.lookup(param.getName()) == null, param, "Parameter name already declared");
+            param.visit(this, arg);
+        }
         //Save root of AST so return type can be accessed in return statements
         root = program;
 
@@ -328,6 +358,8 @@ public class TypeCheckVisitor implements ASTVisitor {
     @Override
     public Object visitNameDefWithDim(NameDefWithDim nameDefWithDim, Object arg) throws Exception {
         // TODO: check that dimensions are int
+        check(nameDefWithDim.getDim().getHeight().getType() == INT, nameDefWithDim, "dimension is not of type INT");
+        check(nameDefWithDim.getDim().getWidth().getType() == INT, nameDefWithDim, "dimension is not of type INT");
         symbolTable.insert(nameDefWithDim.getName(), nameDefWithDim);
         return null;
     }
