@@ -27,14 +27,14 @@ public class TypeCheckVisitor implements ASTVisitor {
     );
 
     private boolean assignmentCompatible(Type targetType, Type rhsType) {
-            return (targetType == rhsType
-                    || targetType == INT && rhsType == FLOAT
-                    || targetType == FLOAT && rhsType == INT
-                    || targetType == INT && rhsType == COLOR
-                    || targetType == COLOR && rhsType == INT
-                    || targetType == IMAGE && rhsType == INT
-                    || targetType == IMAGE && rhsType == FLOAT
-                    || targetType == IMAGE && rhsType == COLOR
+        return (targetType == rhsType
+                || targetType == INT && rhsType == FLOAT
+                || targetType == FLOAT && rhsType == INT
+                || targetType == INT && rhsType == COLOR
+                || targetType == COLOR && rhsType == INT
+                || targetType == IMAGE && rhsType == INT
+                || targetType == IMAGE && rhsType == FLOAT
+                || targetType == IMAGE && rhsType == COLOR
                 || targetType == IMAGE && rhsType == COLORFLOAT
         );
     }
@@ -125,6 +125,10 @@ public class TypeCheckVisitor implements ASTVisitor {
         Type resultType = null;
 
         switch (op) {
+            case OR, AND -> {
+                check(leftType == BOOLEAN && rightType == BOOLEAN, binaryExpr, "both sides must be BOOLEAN");
+                resultType = BOOLEAN;
+            }
             case EQUALS, NOT_EQUALS -> {
                 check(leftType == rightType, binaryExpr, "incompatible types");
                 resultType = BOOLEAN;
@@ -192,9 +196,9 @@ public class TypeCheckVisitor implements ASTVisitor {
 
     @Override
     public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws Exception {
-        Type condition = (Type)conditionalExpr.getCondition().visit(this, arg);
-        Type trueCase = (Type)conditionalExpr.getTrueCase().visit(this, arg);
-        Type falseCase = (Type)conditionalExpr.getFalseCase().visit(this, arg);
+        Type condition = (Type) conditionalExpr.getCondition().visit(this, arg);
+        Type trueCase = (Type) conditionalExpr.getTrueCase().visit(this, arg);
+        Type falseCase = (Type) conditionalExpr.getFalseCase().visit(this, arg);
 
         check(condition == BOOLEAN, conditionalExpr, "type of condition must be boolean");
         check(trueCase == falseCase, conditionalExpr, "type of true case must be equal to false case");
@@ -204,8 +208,8 @@ public class TypeCheckVisitor implements ASTVisitor {
 
     @Override
     public Object visitDimension(Dimension dimension, Object arg) throws Exception {
-        Type left = (Type)dimension.getHeight().visit(this, arg);
-        Type right = (Type)dimension.getWidth().visit(this, arg);
+        Type left = (Type) dimension.getHeight().visit(this, arg);
+        Type right = (Type) dimension.getWidth().visit(this, arg);
         check(left == Type.INT && right == Type.INT, dimension, "both expressions must have type INT");
         return left;
     }
@@ -250,8 +254,8 @@ public class TypeCheckVisitor implements ASTVisitor {
         } else {
 
             PixelSelector selector = assignmentStatement.getSelector();
-            Expr x =  selector.getX();
-            Expr y =  selector.getY();
+            Expr x = selector.getX();
+            Expr y = selector.getY();
             check(x.getClass() == IdentExpr.class, assignmentStatement, "x is not type identExpr");
             check(y.getClass() == IdentExpr.class, assignmentStatement, "y is not type identExpr");
             check(symbolTable.lookup(x.getText()) == null, assignmentStatement, "x is already declared");
@@ -297,7 +301,7 @@ public class TypeCheckVisitor implements ASTVisitor {
         return null;
     }
 
-    private Kind getOp(VarDeclaration declaration){
+    private Kind getOp(VarDeclaration declaration) {
         Token op = (Token) declaration.getOp();
         return op.getKind();
     }
@@ -311,19 +315,18 @@ public class TypeCheckVisitor implements ASTVisitor {
 //        check(inserted, declaration, "variable " + name + " already declared");
 
         Expr rhs = declaration.getExpr();
-        if(rhs == null){
+        if (rhs == null) {
             throw new TypeCheckException("variable was not initialized");
         }
-        Type rhsType = (Type)rhs.visit(this, arg);
-        if(getOp(declaration) == Kind.ASSIGN){
+        Type rhsType = (Type) rhs.visit(this, arg);
+        if (getOp(declaration) == Kind.ASSIGN) {
             check(assignmentCompatible(declaration.getType(), rhsType), declaration, "type of expression and declared type do not match");
             declaration.setInitialized(true);
             rhs.setCoerceTo(declaration.getType());
-        }
-        else if(getOp(declaration) == Kind.LARROW){
-           check(rhsType == CONSOLE || rhsType == STRING, declaration, "type of expression and declared type do not match");
-           declaration.setInitialized(true);
-        }else{
+        } else if (getOp(declaration) == Kind.LARROW) {
+            check(rhsType == CONSOLE || rhsType == STRING, declaration, "type of expression and declared type do not match");
+            declaration.setInitialized(true);
+        } else {
             throw new TypeCheckException("something here idk");
         }
         return declaration;
@@ -334,7 +337,7 @@ public class TypeCheckVisitor implements ASTVisitor {
         //TODO:  this method is incomplete, finish it.
 
         List<NameDef> params = program.getParams();
-        for(NameDef param: params){
+        for (NameDef param : params) {
             check(symbolTable.lookup(param.getName()) == null, param, "Parameter name already declared");
             param.visit(this, arg);
         }
@@ -357,7 +360,6 @@ public class TypeCheckVisitor implements ASTVisitor {
 
     @Override
     public Object visitNameDefWithDim(NameDefWithDim nameDefWithDim, Object arg) throws Exception {
-        // TODO: check that dimensions are int
         check(nameDefWithDim.getDim().getHeight().getType() == INT, nameDefWithDim, "dimension is not of type INT");
         check(nameDefWithDim.getDim().getWidth().getType() == INT, nameDefWithDim, "dimension is not of type INT");
         symbolTable.insert(nameDefWithDim.getName(), nameDefWithDim);
