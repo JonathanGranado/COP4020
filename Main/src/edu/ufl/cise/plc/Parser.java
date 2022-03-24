@@ -1,4 +1,5 @@
 package edu.ufl.cise.plc;
+
 import edu.ufl.cise.plc.ast.*;
 
 import java.util.ArrayList;
@@ -54,10 +55,10 @@ public class Parser implements IParser {
                     } else {
                         error("Missing a right paren after parameter");
                     }
-                    if(match(IToken.Kind.EOF)){
+                    if (match(IToken.Kind.EOF)) {
                         // parameters now check if theres declaration or statement
                         return new Program(firstToken, returnType, name, params, decsAndStatements);
-                    }else {
+                    } else {
                         while (!match(IToken.Kind.EOF)) {
                             if (match(IToken.Kind.TYPE)) {
                                 decl = Declaration();
@@ -77,9 +78,9 @@ public class Parser implements IParser {
                     }
                 }
                 consume(); // no parameters in method (IDENT)
-                if (match(IToken.Kind.EOF)){ // There is no declaration or statement
+                if (match(IToken.Kind.EOF)) { // There is no declaration or statement
                     return new Program(firstToken, returnType, name, params, decsAndStatements);
-                }else {
+                } else {
                     while (!match(IToken.Kind.EOF)) {
                         if (match(IToken.Kind.TYPE)) {
                             decl = Declaration();
@@ -92,20 +93,20 @@ public class Parser implements IParser {
                             if (match(IToken.Kind.SEMI)) {
                                 decsAndStatements.add(state);
                                 consume();
-                            }else if(state == null){
+                            } else if (state == null) {
                                 throw new SyntaxException("No declaration or statement after method name");
-                            }else{
+                            } else {
                                 throw new SyntaxException("Missing a semi colon at the end of a statement or declaration");
                             }
                         }
                     }
-                    if(match(IToken.Kind.EOF)){
+                    if (match(IToken.Kind.EOF)) {
                         return new Program(firstToken, returnType, name, params, decsAndStatements);
-                    }else{
+                    } else {
                         throw new SyntaxException("Missing EOF token at the end of program");
                     }
                 }
-            }else{
+            } else {
                 error("No left paren after method name");
             }
             error("Missing IDENT in Program");
@@ -122,7 +123,7 @@ public class Parser implements IParser {
 //	NameDef (('=' | '<-') Expr)?
         left = NameDef();
         consume();
-        if(t.getKind() == IToken.Kind.ASSIGN || t.getKind() == IToken.Kind.LARROW){
+        if (t.getKind() == IToken.Kind.ASSIGN || t.getKind() == IToken.Kind.LARROW) {
             IToken op = t;
             consume();
             right = expr();
@@ -135,14 +136,14 @@ public class Parser implements IParser {
         IToken firstToken = t;
         Dimension left;
 
-        if(match(IToken.Kind.TYPE)){
+        if (match(IToken.Kind.TYPE)) {
             IToken kind = firstToken;
             consume();
-            if(match(IToken.Kind.IDENT)){
+            if (match(IToken.Kind.IDENT)) {
                 return new NameDef(firstToken, kind.getText(), t.getText());
-            }else{
+            } else {
                 left = Dimension();
-                if(match(IToken.Kind.IDENT)){
+                if (match(IToken.Kind.IDENT)) {
                     return new NameDefWithDim(firstToken, kind.getText(), t.getText(), left);
                 }
             }
@@ -310,7 +311,11 @@ public class Parser implements IParser {
             return null;
         } else {
             consume();
+            NameDef temp = new NameDef(t, "int", t.getText());
             x = expr();
+            if (x.getClass() == IdentExpr.class) {
+
+            }
         }
         if (t.getKind() == IToken.Kind.COMMA) {
             consume();
@@ -343,19 +348,19 @@ public class Parser implements IParser {
         } else if (firstToken.getKind() == IToken.Kind.KW_CONSOLE) {
             e = new ConsoleExpr(firstToken);
         } else if (firstToken.getKind() == IToken.Kind.LPAREN) {
-                consume();
-                e = expr();
-                if (!match(IToken.Kind.RPAREN)) error("Missing right parentheses");
+            consume();
+            e = expr();
+            if (!match(IToken.Kind.RPAREN)) error("Missing right parentheses");
         } else if (firstToken.getKind() == IToken.Kind.LANGLE) {
             consume();
             red = expr();
             if (match(IToken.Kind.COMMA)) consume();
             green = expr();
-            if(match(IToken.Kind.COMMA)) consume();
+            if (match(IToken.Kind.COMMA)) consume();
             blue = expr();
-            if(match(IToken.Kind.RANGLE)){
+            if (match(IToken.Kind.RANGLE)) {
                 return new ColorExpr(firstToken, red, green, blue);
-            }else{
+            } else {
                 error("Not a complete color expression");
             }
         } else {
@@ -375,13 +380,16 @@ public class Parser implements IParser {
         } else {
             consume();
             x = expr();
+
         }
         if (t.getKind() == IToken.Kind.COMMA) {
             consume();
             y = expr();
+
             if (t.getKind() == IToken.Kind.RSQUARE) {
                 consume();
             }
+
         }
         return new Dimension(firstToken, x, y);
     }
@@ -401,31 +409,31 @@ public class Parser implements IParser {
                 }
                 return new WriteStatement(firstToken, x, y);
             }
-            if(match(IToken.Kind.RETURN)){
+            if (match(IToken.Kind.RETURN)) {
                 consume();
                 x = expr();
                 return new ReturnStatement(firstToken, x);
-            }else{
+            } else {
                 throw new SyntaxException("This is not a valid statement as it doesnt start with IDENT and doesn't have a write keyword or ^ ");
             }
-        }else{
+        } else {
             String name = firstToken.getText();
             consume();
-            if(match(IToken.Kind.ASSIGN)){
+            if (match(IToken.Kind.ASSIGN)) {
                 consume();
                 x = expr();
                 return new AssignmentStatement(firstToken, name, null, x);
-            }else if(match(IToken.Kind.LARROW)){
+            } else if (match(IToken.Kind.LARROW)) {
                 consume();
                 x = expr();
                 return new ReadStatement(firstToken, name, null, x);
-            }else{
+            } else {
                 PixelSelector pixel = PixelSelector();
-                if(match(IToken.Kind.ASSIGN)){
+                if (match(IToken.Kind.ASSIGN)) {
                     consume();
                     x = expr();
                     return new AssignmentStatement(firstToken, name, pixel, x);
-                }else if(match(IToken.Kind.LARROW)){
+                } else if (match(IToken.Kind.LARROW)) {
                     consume();
                     x = expr();
                     return new ReadStatement(firstToken, name, pixel, x);

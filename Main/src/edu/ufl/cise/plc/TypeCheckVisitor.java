@@ -237,8 +237,9 @@ public class TypeCheckVisitor implements ASTVisitor {
         // get types
         Type rhsType = (Type) assignmentStatement.getExpr().visit(this, arg);
         Type lhsType = lhsDeclaration.getType();
-        Declaration rhsDeclaration = (Declaration) assignmentStatement.getExpr().visit(this, arg);
-        check(rhsDeclaration.isInitialized(), assignmentStatement, "rhs expression is not initialized");
+
+/*        Declaration rhsDeclaration = symbolTable.lookup(assignmentStatement.getExpr().getText());
+        check(rhsDeclaration.isInitialized(), assignmentStatement, "rhs expression is not initialized");*/
         lhsDeclaration.setInitialized(true);
         //TODO: FINISH
         boolean hasSelector = assignmentStatement.getSelector() != null;
@@ -308,27 +309,40 @@ public class TypeCheckVisitor implements ASTVisitor {
 
     @Override
     public Object visitVarDeclaration(VarDeclaration declaration, Object arg) throws Exception {
-        //TODO:  implement this method
-        if(declaration.getNameDef().getDim() != null){
+        // insert into symbol table
+        if (declaration.getNameDef().getDim() != null) {
+            if (declaration.getDim().getWidth().getClass() == IdentExpr.class) {
+                visitIdentExpr((IdentExpr) declaration.getDim().getWidth(), arg);
+            }
+            if (declaration.getDim().getHeight().getClass() == IdentExpr.class) {
+                visitIdentExpr((IdentExpr) declaration.getDim().getHeight(), arg);
+            }
             visitNameDefWithDim((NameDefWithDim) declaration.getNameDef(), arg);
-        }else{
+        } else {
             visitNameDef(declaration.getNameDef(), arg);
         }
 
         Expr rhs = declaration.getExpr();
-        if (rhs == null) {
+        //If type of variable is Image, it must either have an initializer expression of type IMAGE, or a Dimension
+        if (declaration.getType() == IMAGE) {
+            if (rhs != null) {
+                check(rhs.visit(this, arg) == IMAGE, declaration, "Initializer is not type IMAGE");
+            }
+
+        } else if (rhs == null) {
             throw new TypeCheckException("variable was not initialized");
-        }
-        Type rhsType = (Type) rhs.visit(this, arg);
-        if (getOp(declaration) == Kind.ASSIGN) {
-            check(assignmentCompatible(declaration.getType(), rhsType), declaration, "type of expression and declared type do not match");
-            declaration.setInitialized(true);
-            declaration.getExpr().setCoerceTo(declaration.getType());
-        } else if (getOp(declaration) == Kind.LARROW) {
-            check(rhsType == CONSOLE || rhsType == STRING, declaration, "type of expression and declared type do not match");
-            declaration.setInitialized(true);
         } else {
-            throw new TypeCheckException("something here idk");
+            Type rhsType = (Type) rhs.visit(this, arg);
+            if (getOp(declaration) == Kind.ASSIGN) {
+                check(assignmentCompatible(declaration.getType(), rhsType), declaration, "type of expression and declared type do not match");
+                declaration.setInitialized(true);
+                declaration.getExpr().setCoerceTo(declaration.getType());
+            } else if (getOp(declaration) == Kind.LARROW) {
+                check(rhsType == CONSOLE || rhsType == STRING, declaration, "type of expression and declared type do not match");
+                declaration.setInitialized(true);
+            } else {
+                throw new TypeCheckException("something here idk");
+            }
         }
         return declaration;
     }
@@ -360,8 +374,8 @@ public class TypeCheckVisitor implements ASTVisitor {
 
     @Override
     public Object visitNameDefWithDim(NameDefWithDim nameDefWithDim, Object arg) throws Exception {
-//        check(nameDefWithDim.getDim().getHeight().getType() == INT, nameDefWithDim, "dimension is not of type INT");
-//        check(nameDefWithDim.getDim().getWidth().getType() == INT, nameDefWithDim, "dimension is not of type INT");
+        check(nameDefWithDim.getDim().getHeight().getType() == INT, nameDefWithDim, "dimension is not of type INT");
+        check(nameDefWithDim.getDim().getWidth().getType() == INT, nameDefWithDim, "dimension is not of type INT");
         symbolTable.insert(nameDefWithDim.getName(), nameDefWithDim);
         return null;
     }
