@@ -309,10 +309,11 @@ public class TypeCheckVisitor implements ASTVisitor {
     @Override
     public Object visitVarDeclaration(VarDeclaration declaration, Object arg) throws Exception {
         //TODO:  implement this method
-        visitNameDef(declaration.getNameDef(), arg);
-//        String name = declaration.getName();
-//        boolean inserted = symbolTable.insert(name, declaration);
-//        check(inserted, declaration, "variable " + name + " already declared");
+        if(declaration.getNameDef().getDim() != null){
+            visitNameDefWithDim((NameDefWithDim) declaration.getNameDef(), arg);
+        }else{
+            visitNameDef(declaration.getNameDef(), arg);
+        }
 
         Expr rhs = declaration.getExpr();
         if (rhs == null) {
@@ -322,7 +323,7 @@ public class TypeCheckVisitor implements ASTVisitor {
         if (getOp(declaration) == Kind.ASSIGN) {
             check(assignmentCompatible(declaration.getType(), rhsType), declaration, "type of expression and declared type do not match");
             declaration.setInitialized(true);
-            rhs.setCoerceTo(declaration.getType());
+            declaration.getExpr().setCoerceTo(declaration.getType());
         } else if (getOp(declaration) == Kind.LARROW) {
             check(rhsType == CONSOLE || rhsType == STRING, declaration, "type of expression and declared type do not match");
             declaration.setInitialized(true);
@@ -334,7 +335,6 @@ public class TypeCheckVisitor implements ASTVisitor {
 
     @Override
     public Object visitProgram(Program program, Object arg) throws Exception {
-        //TODO:  this method is incomplete, finish it.
 
         List<NameDef> params = program.getParams();
         for (NameDef param : params) {
@@ -360,8 +360,8 @@ public class TypeCheckVisitor implements ASTVisitor {
 
     @Override
     public Object visitNameDefWithDim(NameDefWithDim nameDefWithDim, Object arg) throws Exception {
-        check(nameDefWithDim.getDim().getHeight().getType() == INT, nameDefWithDim, "dimension is not of type INT");
-        check(nameDefWithDim.getDim().getWidth().getType() == INT, nameDefWithDim, "dimension is not of type INT");
+//        check(nameDefWithDim.getDim().getHeight().getType() == INT, nameDefWithDim, "dimension is not of type INT");
+//        check(nameDefWithDim.getDim().getWidth().getType() == INT, nameDefWithDim, "dimension is not of type INT");
         symbolTable.insert(nameDefWithDim.getName(), nameDefWithDim);
         return null;
     }
