@@ -235,22 +235,23 @@ public class TypeCheckVisitor implements ASTVisitor {
         Declaration lhsDeclaration = symbolTable.lookup(name);
         check(lhsDeclaration != null, assignmentStatement, "undeclared variable " + name);
         // get types
-        Type rhsType = (Type) assignmentStatement.getExpr().visit(this, arg);
+
         Type lhsType = lhsDeclaration.getType();
 
-/*        Declaration rhsDeclaration = symbolTable.lookup(assignmentStatement.getExpr().getText());
-        check(rhsDeclaration.isInitialized(), assignmentStatement, "rhs expression is not initialized");*/
         lhsDeclaration.setInitialized(true);
-        //TODO: FINISH
+
+
         boolean hasSelector = assignmentStatement.getSelector() != null;
         if (lhsType != IMAGE) {
-            check(assignmentCompatible(lhsType, rhsType), assignmentStatement, "incompatible types in assignment");
+            check(assignmentCompatible(lhsType, (Type) assignmentStatement.getExpr().visit(this, arg)), assignmentStatement, "incompatible types in assignment");
             assignmentStatement.getExpr().setCoerceTo(lhsType);
 
         } else if (!hasSelector) {
-            check(assignmentCompatible(lhsType, rhsType), assignmentStatement, "incompatible types in assignment");
-            if (rhsType == INT) assignmentStatement.getExpr().setCoerceTo(COLOR);
-            if (rhsType == FLOAT) assignmentStatement.getExpr().setCoerceTo(COLORFLOAT);
+            check(assignmentCompatible(lhsType, (Type) assignmentStatement.getExpr().visit(this, arg)), assignmentStatement, "incompatible types in assignment");
+            if ((Type) assignmentStatement.getExpr().visit(this, arg) == INT)
+                assignmentStatement.getExpr().setCoerceTo(COLOR);
+            if ((Type) assignmentStatement.getExpr().visit(this, arg) == FLOAT)
+                assignmentStatement.getExpr().setCoerceTo(COLORFLOAT);
 
         } else {
 
@@ -261,14 +262,20 @@ public class TypeCheckVisitor implements ASTVisitor {
             check(y.getClass() == IdentExpr.class, assignmentStatement, "y is not type identExpr");
             check(symbolTable.lookup(x.getText()) == null, assignmentStatement, "x is already declared");
             check(symbolTable.lookup(y.getText()) == null, assignmentStatement, "y is already declared");
-            check((x.getType() == INT && y.getType() == INT), assignmentStatement, "x,y must be INT");
+//            check((x.getType() == INT && y.getType() == INT), assignmentStatement, "x,y must be INT");
             // declare and initialize local variables
-            symbolTable.insert(x.getText(), ((IdentExpr) x).getDec());
-            symbolTable.insert(y.getText(), ((IdentExpr) y).getDec());
+            NameDef xDec = new NameDef(x.getFirstToken(), "int", x.getText());
+            NameDef yDec = new NameDef(y.getFirstToken(), "int", y.getText());
+            symbolTable.insert(x.getText(), xDec);
+            symbolTable.insert(y.getText(), yDec);
+            visitIdentExpr((IdentExpr) x, arg);
+            visitIdentExpr((IdentExpr) y, arg);
+            //symbolTable.insert(x.getText(), ((IdentExpr) x).getDec());
+            //symbolTable.insert(y.getText(), ((IdentExpr) y).getDec());
             symbolTable.lookup(x.getText()).setInitialized(true);
             symbolTable.lookup(y.getText()).setInitialized(true);
 
-            check(assignmentCompatible(lhsType, rhsType), assignmentStatement, "incompatible rhs type in assignment");
+            check(assignmentCompatible(lhsType, (Type) assignmentStatement.getExpr().visit(this, arg)), assignmentStatement, "incompatible rhs type in assignment");
             assignmentStatement.getExpr().setCoerceTo(COLOR);
             // remove local variables
             symbolTable.lookup(x.getText()).setInitialized(false);
@@ -310,7 +317,8 @@ public class TypeCheckVisitor implements ASTVisitor {
     @Override
     public Object visitVarDeclaration(VarDeclaration declaration, Object arg) throws Exception {
         // insert into symbol table
-        if (declaration.getNameDef().getDim() != null) {
+        boolean hasDim = declaration.getNameDef().getDim() != null;
+        if (hasDim) {
             if (declaration.getDim().getWidth().getClass() == IdentExpr.class) {
                 visitIdentExpr((IdentExpr) declaration.getDim().getWidth(), arg);
             }
@@ -327,6 +335,8 @@ public class TypeCheckVisitor implements ASTVisitor {
         if (declaration.getType() == IMAGE) {
             if (rhs != null) {
                 check(rhs.visit(this, arg) == IMAGE, declaration, "Initializer is not type IMAGE");
+            } else if(!hasDim){
+                throw new TypeCheckException("no image initializer or dimension for type IMAGE");
             }
 
         } else if (rhs == null) {
