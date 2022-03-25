@@ -243,6 +243,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 
         boolean hasSelector = assignmentStatement.getSelector() != null;
         if (lhsType != IMAGE) {
+            check(!hasSelector, assignmentStatement, "Cannot have pixel selector if is not type IMAGE");
             check(assignmentCompatible(lhsType, (Type) assignmentStatement.getExpr().visit(this, arg)), assignmentStatement, "incompatible types in assignment");
             assignmentStatement.getExpr().setCoerceTo(lhsType);
 
@@ -350,7 +351,11 @@ public class TypeCheckVisitor implements ASTVisitor {
                 Type rhsType = (Type) rhs.visit(this, arg);
                 if (getOp(declaration) == Kind.ASSIGN) {
                     check(assignmentCompatible(declaration.getType(), rhsType), declaration, "type of expression and declared type do not match");
-                    declaration.setInitialized(true);
+                    if(rhs.getClass() == IdentExpr.class){
+                        declaration.getNameDef().setInitialized(true);
+                    }else{
+                        declaration.setInitialized(true);
+                    }
                     declaration.getExpr().setCoerceTo(declaration.getType());
                 } else if (getOp(declaration) == Kind.LARROW) {
                     check(rhsType == CONSOLE || rhsType == STRING, declaration, "type of expression and declared type do not match");
