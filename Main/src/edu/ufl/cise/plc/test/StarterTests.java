@@ -1012,48 +1012,78 @@ class StarterTests {
         });
         show("Expected TypeCheckException:     " + e);
     }
-
-
-    @DisplayName("test35b")
+    // tests if variable is initialized in the read statement
+    @DisplayName("test36")
     @Test
-    public void test35b(TestInfo testInfo) throws Exception{
+    public void test36(TestInfo testInfo) throws Exception{
         String input = """
-                void f(int y)
-			    y <- "this is a string";
-                """;
+         void b(int y)
+         int x;
+         x <- console;
+         int z = x;
+        
+
+                 """;
         show("-------------");
         show(testInfo.getDisplayName());
         show(input);
         ASTNode ast = getAST(input);
         checkTypes(ast);
-        ReadStatement var0 = (ReadStatement) ((Program) ast).getDecsAndStatements().get(0);
-        assertEquals(Type.INT, var0.getTargetDec().getType());
-        assertEquals(Type.STRING, var0.getSource().getType());
-        Type type = var0.getSource().getCoerceTo();
-        if(type!= null)
-            assertEquals(Type.STRING, type);
-        show(ast);
+
     }
 
 
-    @DisplayName("test35c")
+
+    // read statement should have no pixel selector
+    @DisplayName("test36a")
     @Test
-    public void test35c(TestInfo testInfo) throws Exception{
+    public void test36a(TestInfo testInfo) throws Exception{
         String input = """
-                void f(int y)
-			    y <- console;
-                """;
+         void b(int y)
+         int x;
+         x [1,2] <- console;
+        
+
+                 """;
         show("-------------");
         show(testInfo.getDisplayName());
         show(input);
         ASTNode ast = getAST(input);
-        checkTypes(ast);
-        ReadStatement var0 = (ReadStatement) ((Program) ast).getDecsAndStatements().get(0);
-        assertEquals(Type.INT, var0.getTargetDec().getType());
-        assertEquals(Type.CONSOLE, var0.getSource().getType());
-        assertEquals(Type.INT, var0.getSource().getCoerceTo());
-        show(ast);
+        Exception e = assertThrows(TypeCheckException.class, () -> {
+            checkTypes(ast);
+        });
     }
+
+
+
+    // local variables should be removed from symbol table after
+// right hand side of image with pixel selector is evaluated
+    @DisplayName("test37")
+    @Test
+    public void test37(TestInfo testInfo) throws Exception {
+        String input = """
+            image test(int size)
+                image[size,size] a;
+                int y = 0;
+                a[j,u] = << j, u, 5 >>;
+                int j;
+                string u = "YES";
+                ^ a;
+
+        """;
+        show("-------------");
+        show(testInfo.getDisplayName());
+        show(input);
+        ASTNode ast = getAST(input);
+
+        checkTypes(ast);
+
+
+    }
+
+
+
+
 
 
 }

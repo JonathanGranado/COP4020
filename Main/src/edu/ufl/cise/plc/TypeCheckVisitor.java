@@ -301,10 +301,11 @@ public class TypeCheckVisitor implements ASTVisitor {
 
         String name = readStatement.getName();
         Declaration dec = symbolTable.lookup(name);
-        check(dec.isInitialized(), readStatement, "uninitialized variable " + name);
         Type type = (Type) readStatement.getSource().visit(this, arg);
         check(readStatement.getSelector() == null, readStatement, "read statement cannot have PixelSelector");
         check(type == CONSOLE || type == STRING, readStatement, "read rhs type must be CONTROL or STRING");
+        readStatement.setTargetDec(dec);
+
         dec.setInitialized(true);
         return null;
     }
@@ -339,19 +340,24 @@ public class TypeCheckVisitor implements ASTVisitor {
                 throw new TypeCheckException("no image initializer or dimension for type IMAGE");
             }
 
-        } else if (rhs == null) {
-            throw new TypeCheckException("variable was not initialized");
         } else {
-            Type rhsType = (Type) rhs.visit(this, arg);
-            if (getOp(declaration) == Kind.ASSIGN) {
-                check(assignmentCompatible(declaration.getType(), rhsType), declaration, "type of expression and declared type do not match");
-                declaration.setInitialized(true);
-                declaration.getExpr().setCoerceTo(declaration.getType());
-            } else if (getOp(declaration) == Kind.LARROW) {
-                check(rhsType == CONSOLE || rhsType == STRING, declaration, "type of expression and declared type do not match");
-                declaration.setInitialized(true);
-            } else {
-                throw new TypeCheckException("something here idk");
+            if (rhs != null) {
+                Declaration rhsDec = symbolTable.lookup(rhs.getText());
+                if (rhs.getClass() == IdentExpr.class) {
+                    check(rhsDec != null, declaration, "rhs is not declared");
+                    check(rhsDec.isInitialized(), declaration, "rhs is not initialized");
+                }
+                Type rhsType = (Type) rhs.visit(this, arg);
+                if (getOp(declaration) == Kind.ASSIGN) {
+                    check(assignmentCompatible(declaration.getType(), rhsType), declaration, "type of expression and declared type do not match");
+                    declaration.setInitialized(true);
+                    declaration.getExpr().setCoerceTo(declaration.getType());
+                } else if (getOp(declaration) == Kind.LARROW) {
+                    check(rhsType == CONSOLE || rhsType == STRING, declaration, "type of expression and declared type do not match");
+                    declaration.setInitialized(true);
+                } else {
+                    throw new TypeCheckException("something here idk");
+                }
             }
         }
         return declaration;
@@ -364,6 +370,7 @@ public class TypeCheckVisitor implements ASTVisitor {
         for (NameDef param : params) {
             check(symbolTable.lookup(param.getName()) == null, param, "Parameter name already declared");
             param.visit(this, arg);
+            param.setInitialized(true);
         }
         //Save root of AST so return type can be accessed in return statements
         root = program;
@@ -394,6 +401,10 @@ public class TypeCheckVisitor implements ASTVisitor {
     public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws Exception {
         Type returnType = root.getReturnType();  //This is why we save program in visitProgram.
         Type expressionType = (Type) returnStatement.getExpr().visit(this, arg);
+        if (returnStatement.getExpr().getClass() == IdentExpr.class){
+            Declaration dec = symbolTable.lookup(returnStatement.getExpr().getText());
+            check(dec.isInitialized(), returnStatement, "return rhs has not been initialized");
+        }
         check(returnType == expressionType, returnStatement, "return statement with invalid type");
         return null;
     }
