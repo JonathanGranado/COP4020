@@ -49,7 +49,7 @@
         <SOURCES />
       </library>
     </orderEntry>
-    <orderEntry type="library" name="ASTClassSourcesCompleteHW4" level="project" />
-    <orderEntry type="library" name="ASTClassSourcesCompleteHW4 (2)" level="project" />
+    <orderEntry type="library" name="edu.ufl.cise.plc.runtimeV0" level="project" />
+    <orderEntry type="library" name="edu.ufl.cise.plc.runtimeV0 (" level="project" />
   </component>
 </module>
