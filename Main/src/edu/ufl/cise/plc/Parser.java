@@ -437,10 +437,11 @@ public class Parser implements IParser {
                     consume();
                     x = expr();
                     return new ReadStatement(firstToken, name, pixel, x);
+                }else{
+                    throw new SyntaxException("something");
                 }
             }
         }
-        return null;
     }
 
     void consume() {
