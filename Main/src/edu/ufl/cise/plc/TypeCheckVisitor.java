@@ -263,7 +263,7 @@ public class TypeCheckVisitor implements ASTVisitor {
             check(y.getClass() == IdentExpr.class, assignmentStatement, "y is not type identExpr");
             check(symbolTable.lookup(x.getText()) == null, assignmentStatement, "x is already declared");
             check(symbolTable.lookup(y.getText()) == null, assignmentStatement, "y is already declared");
-//            check((x.getType() == INT && y.getType() == INT), assignmentStatement, "x,y must be INT");
+//            x.setType();
             // declare and initialize local variables
             NameDef xDec = new NameDef(x.getFirstToken(), "int", x.getText());
             NameDef yDec = new NameDef(y.getFirstToken(), "int", y.getText());
@@ -289,8 +289,10 @@ public class TypeCheckVisitor implements ASTVisitor {
 
     @Override
     public Object visitWriteStatement(WriteStatement writeStatement, Object arg) throws Exception {
+       // left is source right is dest
         Type sourceType = (Type) writeStatement.getSource().visit(this, arg);
         Type destType = (Type) writeStatement.getDest().visit(this, arg);
+//        writeStatement.getDest().setCoerceTo(sourceType);
         check(destType == Type.STRING || destType == Type.CONSOLE, writeStatement,
                 "illegal destination type for write");
         check(sourceType != Type.CONSOLE, writeStatement, "illegal source type for write");
@@ -299,14 +301,16 @@ public class TypeCheckVisitor implements ASTVisitor {
 
     @Override
     public Object visitReadStatement(ReadStatement readStatement, Object arg) throws Exception {
-
+        // left is dest right is source
         String name = readStatement.getName();
         Declaration dec = symbolTable.lookup(name);
         Type type = (Type) readStatement.getSource().visit(this, arg);
+        if(type == CONSOLE){
+            readStatement.getSource().setCoerceTo(dec.getType());
+        }
         check(readStatement.getSelector() == null, readStatement, "read statement cannot have PixelSelector");
         check(type == CONSOLE || type == STRING, readStatement, "read rhs type must be CONTROL or STRING");
         readStatement.setTargetDec(dec);
-
         dec.setInitialized(true);
         return null;
     }
@@ -326,6 +330,12 @@ public class TypeCheckVisitor implements ASTVisitor {
             }
             if (declaration.getDim().getHeight().getClass() == IdentExpr.class) {
                 visitIdentExpr((IdentExpr) declaration.getDim().getHeight(), arg);
+            }
+            if(declaration.getDim().getHeight().getClass() == IntLitExpr.class){
+                declaration.getDim().getHeight().setType(Type.INT);
+            }
+            if(declaration.getDim().getWidth().getClass() == IntLitExpr.class){
+                declaration.getDim().getWidth().setType(Type.INT);
             }
             visitNameDefWithDim((NameDefWithDim) declaration.getNameDef(), arg);
         } else {
@@ -351,15 +361,14 @@ public class TypeCheckVisitor implements ASTVisitor {
                 Type rhsType = (Type) rhs.visit(this, arg);
                 if (getOp(declaration) == Kind.ASSIGN) {
                     check(assignmentCompatible(declaration.getType(), rhsType), declaration, "type of expression and declared type do not match");
-                    if(rhs.getClass() == IdentExpr.class){
-                        declaration.getNameDef().setInitialized(true);
-                    }else{
-                        declaration.setInitialized(true);
-                    }
+                    declaration.getNameDef().setInitialized(true);
                     declaration.getExpr().setCoerceTo(declaration.getType());
                 } else if (getOp(declaration) == Kind.LARROW) {
+                    if(rhsType == CONSOLE){
+                        declaration.getExpr().setCoerceTo(declaration.getType());
+                    }
                     check(rhsType == CONSOLE || rhsType == STRING, declaration, "type of expression and declared type do not match");
-                    declaration.setInitialized(true);
+                    declaration.getNameDef().setInitialized(true);
                 } else {
                     throw new TypeCheckException("something here idk");
                 }
@@ -396,8 +405,8 @@ public class TypeCheckVisitor implements ASTVisitor {
 
     @Override
     public Object visitNameDefWithDim(NameDefWithDim nameDefWithDim, Object arg) throws Exception {
-        check(nameDefWithDim.getDim().getHeight().getType() == INT, nameDefWithDim, "dimension is not of type INT");
-        check(nameDefWithDim.getDim().getWidth().getType() == INT, nameDefWithDim, "dimension is not of type INT");
+        check(nameDefWithDim.getDim().getHeight().getType() == INT, nameDefWithDim, "height is not of type INT");
+        check(nameDefWithDim.getDim().getWidth().getType() == INT, nameDefWithDim, "width is not of type INT");
         symbolTable.insert(nameDefWithDim.getName(), nameDefWithDim);
         return null;
     }
