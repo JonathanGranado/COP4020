@@ -3,15 +3,18 @@ package edu.ufl.cise.plc;
 import edu.ufl.cise.plc.ast.*;
 import edu.ufl.cise.plc.runtime.ConsoleIO;
 
-public class CodeGenVisitor {
+public class CodeGenVisitor implements ASTVisitor {
 
-
+    Program root;
+    // still trying to figure out how to get program to pass in here
     public CodeGenVisitor(String packageName) throws Exception {
-        visitProgram(packageName);
+        visitProgram(root,packageName);
     }
-    private void visitProgram(Program program, String packageName) throws Exception {
-        int index = program.getParams().size();
 
+    @Override
+    public Object visitProgram(Program program, Object arg) throws Exception {
+        String packageName = (String)arg;
+        int index = program.getParams().size();
         CodeGenStringBuilder sb = new CodeGenStringBuilder();
         sb.append(packageName);
         sb.append("import runtime.*");
@@ -22,6 +25,7 @@ public class CodeGenVisitor {
            sb.comma();
         }
         program.getParams().get(index).visit((ASTVisitor) this, sb);
+        return sb.newline();
     }
 
     public Object visitNameDef(NameDef nameDef, Object arg) throws Exception {
@@ -30,6 +34,11 @@ public class CodeGenVisitor {
         String name = nameDef.getName();
         sb.append(type.toString()).append(name).newline();
         return sb;
+    }
+
+    @Override
+    public Object visitNameDefWithDim(NameDefWithDim nameDefWithDim, Object arg) throws Exception {
+        return null;
     }
 
     public Object visitVarDeclaration(VarDeclaration varDeclaration, Object arg) throws Exception {
@@ -50,6 +59,11 @@ public class CodeGenVisitor {
         return sb;
     }
 
+    @Override
+    public Object visitUnaryExprPostfix(UnaryExprPostfix unaryExprPostfix, Object arg) throws Exception {
+        return null;
+    }
+
     public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws Exception {
         CodeGenStringBuilder sb = new CodeGenStringBuilder();
         Expr condition = conditionalExpr.getCondition();
@@ -63,6 +77,16 @@ public class CodeGenVisitor {
         falseCase.visit((ASTVisitor) this, sb);
         sb.newline();
         return sb;
+    }
+
+    @Override
+    public Object visitDimension(Dimension dimension, Object arg) throws Exception {
+        return null;
+    }
+
+    @Override
+    public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws Exception {
+        return null;
     }
 
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws Exception {
@@ -109,6 +133,11 @@ public class CodeGenVisitor {
         return sb;
     }
 
+    @Override
+    public Object visitColorExpr(ColorExpr colorExpr, Object arg) throws Exception {
+        return null;
+    }
+
     public Object visitFloatLitExpr(FloatLitExpr floatLitExpr, Object arg) throws Exception {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         float value = floatLitExpr.getValue();
@@ -117,6 +146,11 @@ public class CodeGenVisitor {
         }
         sb.append(value).newline();
         return sb;
+    }
+
+    @Override
+    public Object visitColorConstExpr(ColorConstExpr colorConstExpr, Object arg) throws Exception {
+        return null;
     }
 
     public Object visitIntLitExpr(IntLitExpr intLitExpr, Object arg) throws Exception {
