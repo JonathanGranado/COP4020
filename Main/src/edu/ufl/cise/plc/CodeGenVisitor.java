@@ -1,33 +1,68 @@
 package edu.ufl.cise.plc;
 
 import edu.ufl.cise.plc.ast.*;
+import edu.ufl.cise.plc.runtime.ConsoleIO;
 
 public class CodeGenVisitor {
 
-    public CodeGenVisitor(String packageName){
+
+    public CodeGenVisitor(String packageName) throws Exception {
         visitProgram(packageName);
     }
+    private void visitProgram(Program program, String packageName) throws Exception {
+        int index = program.getParams().size();
 
-    private void visitProgram(String packageName) {
         CodeGenStringBuilder sb = new CodeGenStringBuilder();
         sb.append(packageName);
         sb.append("import runtime.*");
-
+        sb.append("public class").append(program.getName()).leftBrace().append("\t public static ").append(program.getReturnType().toString());
+        sb.append("apply ").leftParen();
+        for(int i = 0; i < index - 1; i++){
+           program.getParams().get(i).visit((ASTVisitor) this,sb);
+           sb.comma();
+        }
+        program.getParams().get(index).visit((ASTVisitor) this, sb);
     }
 
-    // return arg.. are just placeholders
     public Object visitNameDef(NameDef nameDef, Object arg) throws Exception {
-        return arg;
+        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+        Types.Type type = nameDef.getType();
+        String name = nameDef.getName();
+        sb.append(type.toString()).append(name).newline();
+        return sb;
     }
 
     public Object visitVarDeclaration(VarDeclaration varDeclaration, Object arg) throws Exception {
-        return arg;
-
+        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+        NameDef nameDef = varDeclaration.getNameDef();
+        Expr expr = varDeclaration.getExpr();
+        IToken.Kind op = varDeclaration.getOp().getKind();
+        nameDef.visit((ASTVisitor) this, sb);
+        if(varDeclaration.getOp() == null){
+            sb.semi();
+        }else if(op == IToken.Kind.ASSIGN){
+            throw new UnsupportedOperationException("Not implemented");
+        }else{
+            sb.append("=");
+            expr.visit((ASTVisitor) this, arg);
+        }
+        sb.newline();
+        return sb;
     }
 
     public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws Exception {
-        return arg;
-
+        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+        Expr condition = conditionalExpr.getCondition();
+        Expr trueCase = conditionalExpr.getTrueCase();
+        Expr falseCase = conditionalExpr.getFalseCase();
+        sb.leftParen();
+        condition.visit((ASTVisitor) this,sb);
+        sb.rightParen().ternary();
+        trueCase.visit((ASTVisitor) this, sb);
+        sb.colon();
+        falseCase.visit((ASTVisitor) this, sb);
+        sb.newline();
+        return sb;
     }
 
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws Exception {
@@ -38,15 +73,11 @@ public class CodeGenVisitor {
         Types.Type leftType = left.getCoerceTo() != null ? left.getCoerceTo() : left.getType();
         Types.Type rightType = right.getCoerceTo() != null ? right.getCoerceTo() : right.getType();
         IToken.Kind op = binaryExpr.getOp().getKind();
-//        if(not handled in assignment 5){
-//            throw new UnsupportedOperationException("Not implemented");
-//        }else{
-//            sb.leftParen();
-//            left.visit((ASTVisitor) this, sb);
-//            sb.append(binaryExpr.getOp().getText());
-//            right.visit((ASTVisitor) this, sb);
-//            sb.rightParen();
-//        }
+        sb.leftParen();
+        left.visit((ASTVisitor) this, sb);
+        sb.append(binaryExpr.getOp().getText());
+        right.visit((ASTVisitor) this, sb);
+        sb.rightParen();
         if(binaryExpr.getCoerceTo() != type){
             genTypeConversion(type, binaryExpr.getCoerceTo(), sb);
         }
@@ -54,48 +85,97 @@ public class CodeGenVisitor {
     }
 
     public Object visitBooleanLitExpr(BooleanLitExpr booleanLitExpr, Object arg) throws Exception {
-        return arg;
-
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+        sb.append(booleanLitExpr.getValue());
+        return sb.newline();
     }
 
     public Object visitConsoleExpr(ConsoleExpr consoleExpr, Object arg) throws Exception {
-        return arg;
-
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+        Types.Type coerceType = consoleExpr.getCoerceTo();
+        String objectType = null;
+        if(coerceType == Types.Type.INT){
+            objectType = "Integer";
+        }else if(coerceType == Types.Type.STRING){
+            objectType = "String";
+        }else if(coerceType == Types.Type.BOOLEAN){
+            objectType = "Boolean";
+        }else if(coerceType == Types.Type.FLOAT){
+            objectType = "Float";
+        }
+        sb.leftParen().append(objectType);
+        ConsoleIO.readValueFromConsole(coerceType.toString(), "Enter desired type");
+        sb.rightParen().newline();
+        return sb;
     }
 
     public Object visitFloatLitExpr(FloatLitExpr floatLitExpr, Object arg) throws Exception {
-        return arg;
-
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+        float value = floatLitExpr.getValue();
+        if(floatLitExpr.getCoerceTo() != null && floatLitExpr.getCoerceTo() != Types.Type.FLOAT){
+            genTypeConversion(floatLitExpr.getType(), floatLitExpr.getCoerceTo(), sb);
+        }
+        sb.append(value).newline();
+        return sb;
     }
 
     public Object visitIntLitExpr(IntLitExpr intLitExpr, Object arg) throws Exception {
-        return arg;
-
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+        int value = intLitExpr.getValue();
+        if(intLitExpr.getCoerceTo() != null && intLitExpr.getCoerceTo() != Types.Type.INT){
+            genTypeConversion(intLitExpr.getType(), intLitExpr.getCoerceTo(), sb);
+        }
+        sb.append(value).newline();
+        return sb;
     }
 
     public Object visitIdentExpr(IdentExpr identExpr, Object arg) throws Exception {
-        return arg;
-
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+        if(identExpr.getCoerceTo() != null && identExpr.getCoerceTo() != identExpr.getType()){
+            genTypeConversion(identExpr.getType(), identExpr.getCoerceTo(), sb);
+        }
+        sb.append(identExpr.getText()).newline();
+        return sb;
     }
 
     public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws Exception {
-        return arg;
-
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+        sb.tripleQuote().append(stringLitExpr.getValue()).tripleQuote().newline();
+        return sb;
     }
 
     public Object visitUnaryExpr(UnaryExpr unaryExpr, Object arg) throws Exception {
-        return arg;
-
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+//        Types.Type type = unaryExpr.getType();
+        IToken.Kind op = unaryExpr.getOp().getKind();
+        Expr expr = unaryExpr.getExpr();
+        if(op == IToken.Kind.BANG || op == IToken.Kind.MINUS){
+            sb.leftParen().append(unaryExpr.getOp().getText());
+            expr.visit((ASTVisitor) this, sb);
+            sb.rightParen().newline();
+        }else{
+            throw new UnsupportedOperationException("Not implemented");
+        }
+        return sb;
     }
 
 
     public Object visitReadStatement(ReadStatement readStatement, Object arg) throws Exception {
-        return arg;
-
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+        String name = readStatement.getName();
+        ConsoleExpr expr = (ConsoleExpr) readStatement.getSource();
+        sb.append(name).assign();
+        expr.visit((ASTVisitor) this, sb);
+        sb.semi().newline();
+        return sb;
     }
 
     public Object visitWriteStatement(WriteStatement writeStatement, Object arg) throws Exception {
-        return arg;
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+        Expr source = writeStatement.getSource();
+        ConsoleIO.console.println(source.visit((ASTVisitor) this,sb));
+        sb.semi().newline();
+        return sb;
     }
 
     public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, Object arg) throws Exception {

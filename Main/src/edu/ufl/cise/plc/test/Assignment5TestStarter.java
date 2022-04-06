@@ -72,12 +72,12 @@ class Assignment5TestStarter {
 		//Generate Java code
 		String className = ((Program) ast).getName();
 		String fullyQualifiedName = packageName != "" ? packageName + '.' + className : className;
-//		String javaCode = (String) ast.visit(CompilerComponentFactory.getCodeGenerator(packageName), null);
-//		show(javaCode);
-		//Invoke Java compiler to obtain bytecode
-//		byte[] byteCode = DynamicCompiler.compile(fullyQualifiedName, javaCode);
-		//Load generated classfile and execute its apply method.
-//		Object result = DynamicClassLoader.loadClassAndRunMethod(byteCode, fullyQualifiedName, "apply", params);
+		String javaCode = (String) ast.visit(CompilerComponentFactory.getCodeGenerator(packageName), null);
+		show(javaCode);
+//		Invoke Java compiler to obtain bytecode
+		byte[] byteCode = DynamicCompiler.compile(fullyQualifiedName, javaCode);
+//		Load generated classfile and execute its apply method.
+		Object result = DynamicClassLoader.loadClassAndRunMethod(byteCode, fullyQualifiedName, "apply", params);
 		return null;
 	}
 
