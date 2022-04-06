@@ -5,10 +5,10 @@ import edu.ufl.cise.plc.runtime.ConsoleIO;
 
 public class CodeGenVisitor implements ASTVisitor {
 
-    Program root;
+
     // still trying to figure out how to get program to pass in here
     public CodeGenVisitor(String packageName) throws Exception {
-        visitProgram(root,packageName);
+        System.out.println(packageName);
     }
 
     @Override
@@ -28,6 +28,7 @@ public class CodeGenVisitor implements ASTVisitor {
         return sb.newline();
     }
 
+    @Override
     public Object visitNameDef(NameDef nameDef, Object arg) throws Exception {
         CodeGenStringBuilder sb = new CodeGenStringBuilder();
         Types.Type type = nameDef.getType();
