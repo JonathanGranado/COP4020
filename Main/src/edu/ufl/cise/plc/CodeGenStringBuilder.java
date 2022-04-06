@@ -4,7 +4,7 @@ import edu.ufl.cise.plc.ast.NameDef;
 
 public class CodeGenStringBuilder {
 
-    StringBuilder delegate;
+    StringBuilder delegate = new StringBuilder();
 
     public CodeGenStringBuilder append(String s){
         delegate.append(s);

@@ -78,7 +78,9 @@ class Assignment5TestStarter {
 		byte[] byteCode = DynamicCompiler.compile(fullyQualifiedName, javaCode);
 //		Load generated classfile and execute its apply method.
 		Object result = DynamicClassLoader.loadClassAndRunMethod(byteCode, fullyQualifiedName, "apply", params);
-		return null;
+		return result;
+
+
 	}
 
 
