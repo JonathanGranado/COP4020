@@ -19,7 +19,6 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitProgram(Program program, Object arg) throws Exception {
-        int index = program.getParams().size();
         CodeGenStringBuilder sb = new CodeGenStringBuilder();
         sb.append("package ");
         sb.append(packageName).semi().newline();
@@ -96,7 +95,7 @@ public class CodeGenVisitor implements ASTVisitor {
             }
             expr.visit(this, sb);
         }
-        sb.newline();
+        sb.semi().newline();
         return sb;
     }
 
@@ -247,10 +246,11 @@ public class CodeGenVisitor implements ASTVisitor {
     }
 
     public Object visitWriteStatement(WriteStatement writeStatement, Object arg) throws Exception {
-        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+//        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         Expr source = writeStatement.getSource();
-        ConsoleIO.console.println(source.visit((ASTVisitor) this, sb));
-        sb.semi();
+        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+//        ConsoleIO.console.println("hii");
+        sb.append("\t\t");
         return sb;
     }
 
