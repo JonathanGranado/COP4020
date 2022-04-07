@@ -107,7 +107,7 @@ class Assignment5TestStarter {
 		String input = "int y() ^42;";
 		checkResult(input,  null, 42);
 	}
-
+	@Test
 	void test2() throws Exception {
 		String input = """
 				string y() ^ "hello";
