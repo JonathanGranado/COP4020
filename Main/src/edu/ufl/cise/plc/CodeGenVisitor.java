@@ -93,6 +93,11 @@ public class CodeGenVisitor implements ASTVisitor {
             } else {
                 throw new UnsupportedOperationException("Invalid operator");
             }
+            if(expr != null && expr.getCoerceTo() != expr.getType() && expr.getCoerceTo() != null){
+                // change this to genTypeConversion
+                Types.Type coerceTo = expr.getCoerceTo();
+                sb.leftParen().append(coerceTo.toString().toLowerCase()).rightParen();
+            }
             expr.visit(this, sb);
         }
         sb.semi().newline();
@@ -109,13 +114,13 @@ public class CodeGenVisitor implements ASTVisitor {
         Expr condition = conditionalExpr.getCondition();
         Expr trueCase = conditionalExpr.getTrueCase();
         Expr falseCase = conditionalExpr.getFalseCase();
-        sb.leftParen();
+        sb.leftParen().leftParen();
         condition.visit((ASTVisitor) this, sb);
         sb.rightParen().ternary();
         trueCase.visit((ASTVisitor) this, sb);
         sb.colon();
         falseCase.visit((ASTVisitor) this, sb);
-        sb.newline();
+        sb.rightParen().newline();
         return sb;
     }
 
@@ -246,7 +251,6 @@ public class CodeGenVisitor implements ASTVisitor {
     }
 
     public Object visitWriteStatement(WriteStatement writeStatement, Object arg) throws Exception {
-//        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         Expr source = writeStatement.getSource();
         CodeGenStringBuilder sb = new CodeGenStringBuilder();
 //        ConsoleIO.console.println("hii");
@@ -275,7 +279,7 @@ public class CodeGenVisitor implements ASTVisitor {
     }
 
     private void genTypeConversion(Types.Type type, Types.Type coerceTo, CodeGenStringBuilder sb) {
-
+// should also handle if case is String
     }
 
 
