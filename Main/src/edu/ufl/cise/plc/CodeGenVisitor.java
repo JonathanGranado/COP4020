@@ -21,13 +21,13 @@ public class CodeGenVisitor implements ASTVisitor {
         sb.append("package ");
         sb.append(packageName).semi().newline();
         //     sb.append(" import runtime.*; ");
-        sb.append("public class ").append(program.getName()).leftBrace().append("\t public static ");
+        sb.append("public class ").append(program.getName()).append(" ").leftBrace().newline().append("\t public static ");
         if (program.getReturnType() == Types.Type.STRING) {
             sb.append("String");
         } else {
             sb.append(program.getReturnType().toString().toLowerCase());
         }
-        sb.append(" apply ").leftParen();
+        sb.append(" apply").leftParen();
         // if there are parameters
         if (program.getParams().size() > 0) {
             // make list of parameter name as strings
@@ -39,7 +39,7 @@ public class CodeGenVisitor implements ASTVisitor {
             String CSVParams = String.join(",", params);
             sb.append(CSVParams);
         }
-        sb.rightParen().leftBrace();
+        sb.rightParen().leftBrace().newline().append("\t\t");
 
         if (program.getDecsAndStatements() != null) {
             // add list of declarations and statements
@@ -47,7 +47,7 @@ public class CodeGenVisitor implements ASTVisitor {
                 object.visit(this, sb);
             }
         }
-        sb.rightBrace().rightBrace().newline();
+        sb.append("\t").rightBrace().newline().rightBrace().newline();
         String result = sb.delegate.toString();
         return result;
     }
@@ -136,7 +136,7 @@ public class CodeGenVisitor implements ASTVisitor {
     public Object visitBooleanLitExpr(BooleanLitExpr booleanLitExpr, Object arg) throws Exception {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         sb.append(booleanLitExpr.getValue());
-        return sb.newline();
+        return sb;
     }
 
     public Object visitConsoleExpr(ConsoleExpr consoleExpr, Object arg) throws Exception {
@@ -154,7 +154,7 @@ public class CodeGenVisitor implements ASTVisitor {
         }
         sb.leftParen().append(objectType);
         ConsoleIO.readValueFromConsole(coerceType.toString(), "Enter desired type");
-        sb.rightParen().newline();
+        sb.rightParen();
         return sb;
     }
 
@@ -169,7 +169,7 @@ public class CodeGenVisitor implements ASTVisitor {
         if (floatLitExpr.getCoerceTo() != null && floatLitExpr.getCoerceTo() != Types.Type.FLOAT) {
             genTypeConversion(floatLitExpr.getType(), floatLitExpr.getCoerceTo(), sb);
         }
-        sb.append(value).newline();
+        sb.append(value);
         return sb;
     }
 
@@ -184,7 +184,7 @@ public class CodeGenVisitor implements ASTVisitor {
         if (intLitExpr.getCoerceTo() != null && intLitExpr.getCoerceTo() != Types.Type.INT) {
             genTypeConversion(intLitExpr.getType(), intLitExpr.getCoerceTo(), sb);
         }
-        sb.append(value).newline();
+        sb.append(value);
         return sb;
     }
 
@@ -193,13 +193,13 @@ public class CodeGenVisitor implements ASTVisitor {
         if (identExpr.getCoerceTo() != null && identExpr.getCoerceTo() != identExpr.getType()) {
             genTypeConversion(identExpr.getType(), identExpr.getCoerceTo(), sb);
         }
-        sb.append(identExpr.getText()).newline();
+        sb.append(identExpr.getText());
         return sb;
     }
 
     public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws Exception {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
-        sb.newline().append("\"").append(stringLitExpr.getValue()).append("\"").newline();
+        sb.append("\"").append(stringLitExpr.getValue()).append("\"");
         return sb;
     }
 
@@ -225,7 +225,7 @@ public class CodeGenVisitor implements ASTVisitor {
         ConsoleExpr expr = (ConsoleExpr) readStatement.getSource();
         sb.append(name).assign();
         expr.visit((ASTVisitor) this, sb);
-        sb.semi().newline();
+        sb.semi();
         return sb;
     }
 
@@ -233,7 +233,7 @@ public class CodeGenVisitor implements ASTVisitor {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         Expr source = writeStatement.getSource();
         ConsoleIO.console.println(source.visit((ASTVisitor) this, sb));
-        sb.semi().newline();
+        sb.semi();
         return sb;
     }
 
