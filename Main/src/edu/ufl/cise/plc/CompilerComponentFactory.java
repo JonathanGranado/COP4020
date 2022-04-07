@@ -22,6 +22,6 @@ public class CompilerComponentFactory {
     }
 
     public static ASTVisitor getCodeGenerator(String packageName) throws Exception {
-        return (ASTVisitor) new CodeGenVisitor(packageName);
+        return new CodeGenVisitor(packageName);
     }
 }

@@ -4,11 +4,11 @@ import edu.ufl.cise.plc.ast.*;
 import edu.ufl.cise.plc.runtime.ConsoleIO;
 
 import java.util.List;
-import java.util.Locale;
 
 public class CodeGenVisitor implements ASTVisitor {
 
     private String packageName;
+
     // still trying to figure out how to get program to pass in here
     public CodeGenVisitor(String _packageName) throws Exception {
         packageName = _packageName;
@@ -19,9 +19,14 @@ public class CodeGenVisitor implements ASTVisitor {
         int index = program.getParams().size();
         CodeGenStringBuilder sb = new CodeGenStringBuilder();
         sb.append("package ");
-        sb.append(packageName).semi();
-        sb.append(" import runtime.*; ");
-        sb.append("public class ").append(program.getName()).leftBrace().append("\t public static ").append(program.getReturnType().toString().toLowerCase());
+        sb.append(packageName).semi().newline();
+        //     sb.append(" import runtime.*; ");
+        sb.append("public class ").append(program.getName()).leftBrace().append("\t public static ");
+        if (program.getReturnType() == Types.Type.STRING) {
+            sb.append("String");
+        } else {
+            sb.append(program.getReturnType().toString().toLowerCase());
+        }
         sb.append(" apply ").leftParen();
         // if there are parameters
         if (program.getParams().size() > 0) {
@@ -43,8 +48,8 @@ public class CodeGenVisitor implements ASTVisitor {
             }
         }
         sb.rightBrace().rightBrace().newline();
-
-        return sb.toString();
+        String result = sb.delegate.toString();
+        return result;
     }
 
     @Override
@@ -194,7 +199,7 @@ public class CodeGenVisitor implements ASTVisitor {
 
     public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws Exception {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
-        sb.tripleQuote().append(stringLitExpr.getValue()).tripleQuote().newline();
+        sb.newline().append("\"").append(stringLitExpr.getValue()).append("\"").newline();
         return sb;
     }
 
@@ -246,7 +251,7 @@ public class CodeGenVisitor implements ASTVisitor {
     public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws Exception {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         Expr expr = returnStatement.getExpr();
-        sb.append("return");
+        sb.append("return ");
         expr.visit((ASTVisitor) this, sb);
         sb.semi().newline();
         return sb;
