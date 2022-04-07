@@ -240,7 +240,7 @@ class Assignment5TestStarter {
 	}
 
 	@Test
-	//This test reads from the console.  The tester should see that displayed result is same as entered.
+//	This test reads from the console.  The tester should see that displayed result is same as entered.
 	void testReadInt0() throws Exception {
 		String input = """
 				int testRead0()

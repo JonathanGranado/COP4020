@@ -85,4 +85,9 @@ public class CodeGenStringBuilder {
         delegate.append("}");
         return this;
     }
+
+    public CodeGenStringBuilder append(Object value) {
+        delegate.append(value);
+        return this;
+    }
 }

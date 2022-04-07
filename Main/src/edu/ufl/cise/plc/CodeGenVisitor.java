@@ -3,6 +3,8 @@ package edu.ufl.cise.plc;
 import edu.ufl.cise.plc.ast.*;
 import edu.ufl.cise.plc.runtime.ConsoleIO;
 
+import javax.swing.event.ListDataEvent;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
@@ -21,7 +23,7 @@ public class CodeGenVisitor implements ASTVisitor {
         CodeGenStringBuilder sb = new CodeGenStringBuilder();
         sb.append("package ");
         sb.append(packageName).semi().newline();
-        //     sb.append(" import runtime.*; ");
+        sb.append("import edu.ufl.cise.plc.runtime.*; ").newline();
         sb.append("public class ").append(program.getName()).append(" ").leftBrace().newline().append("\t public static ");
         if (program.getReturnType() == Types.Type.STRING) {
             sb.append("String");
@@ -29,17 +31,21 @@ public class CodeGenVisitor implements ASTVisitor {
             sb.append(program.getReturnType().toString().toLowerCase());
         }
         sb.append(" apply").leftParen();
-        // if there are parameters
-        if (program.getParams().size() > 0) {
-            // make list of parameter name as strings
-            List<String> params = null;
-            for (NameDef param : program.getParams()) {
-                params.add(param.getName());
+
+        List<NameDef> list = program.getParams();
+        Iterator<NameDef> iterator = list.iterator();
+        while (iterator.hasNext()){
+            NameDef name = iterator.next();
+            if (name.getType().toString().equals("STRING")) {
+                sb.append("String " + name.getName());
+            } else {
+                sb.append(name.getType().toString().toLowerCase() + " " + name.getName());
             }
-            // turn param names into CSV string
-            String CSVParams = String.join(",", params);
-            sb.append(CSVParams);
+            if(iterator.hasNext()){
+                sb.comma();
+            }
         }
+
         sb.rightParen().leftBrace().newline().append("\t\t");
 
         if (program.getDecsAndStatements() != null) {
@@ -57,7 +63,7 @@ public class CodeGenVisitor implements ASTVisitor {
     public Object visitNameDef(NameDef nameDef, Object arg) throws Exception {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         if (nameDef.getType() == Types.Type.STRING){
-            sb.append("String ");
+            sb.append("String ").append(nameDef.getName());
         } else{
             Types.Type type = nameDef.getType();
             String name = nameDef.getName();
@@ -75,28 +81,22 @@ public class CodeGenVisitor implements ASTVisitor {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         NameDef nameDef = varDeclaration.getNameDef();
         Expr expr = varDeclaration.getExpr();
-        IToken.Kind op = varDeclaration.getOp().getKind();
+        IToken op = varDeclaration.getOp();
         nameDef.visit((ASTVisitor) this, sb);
         // if no initializer
-        if (varDeclaration.getOp() == null) {
+        if (op == null) {
             sb.semi();
         } else {
-            if (op == IToken.Kind.ASSIGN){
+            if (op.getKind() == IToken.Kind.ASSIGN){
                 sb.append("=");
-            } else if (op == IToken.Kind.LARROW){
+            } else if (op.getKind() == IToken.Kind.LARROW){
                 sb.append("<-");
             } else {
                 throw new UnsupportedOperationException("Invalid operator");
             }
             expr.visit(this, sb);
         }
-        /*else if (op == IToken.Kind.ASSIGN) {
-            throw new UnsupportedOperationException("Not implemented");
-        } else {
-            sb.append("=");
-            expr.visit((ASTVisitor) this, arg);*/
-
-        sb.semi().newline();
+        sb.newline();
         return sb;
     }
 
@@ -131,7 +131,7 @@ public class CodeGenVisitor implements ASTVisitor {
     }
 
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws Exception {
-        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+        CodeGenStringBuilder sb = new CodeGenStringBuilder();
         Types.Type type = binaryExpr.getType();
         Expr left = binaryExpr.getLeft();
         Expr right = binaryExpr.getRight();
@@ -146,7 +146,7 @@ public class CodeGenVisitor implements ASTVisitor {
         if (binaryExpr.getCoerceTo() != type) {
             genTypeConversion(type, binaryExpr.getCoerceTo(), sb);
         }
-        return ((CodeGenStringBuilder) arg).append(sb.toString());
+        return ((CodeGenStringBuilder) arg).append(sb.delegate.toString());
     }
 
     public Object visitBooleanLitExpr(BooleanLitExpr booleanLitExpr, Object arg) throws Exception {
@@ -160,17 +160,18 @@ public class CodeGenVisitor implements ASTVisitor {
         Types.Type coerceType = consoleExpr.getCoerceTo();
         String objectType = null;
         if (coerceType == Types.Type.INT) {
-            objectType = "Integer";
+            objectType = "int";
         } else if (coerceType == Types.Type.STRING) {
             objectType = "String";
         } else if (coerceType == Types.Type.BOOLEAN) {
-            objectType = "Boolean";
+            objectType = "boolean";
         } else if (coerceType == Types.Type.FLOAT) {
-            objectType = "Float";
+            objectType = "float";
         }
         sb.leftParen().append(objectType);
-        ConsoleIO.readValueFromConsole(coerceType.toString(), "Enter desired type");
         sb.rightParen();
+        Object value = ConsoleIO.readValueFromConsole(coerceType.toString(), "Enter value");
+        sb.append(value);
         return sb;
     }
 
@@ -239,9 +240,9 @@ public class CodeGenVisitor implements ASTVisitor {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         String name = readStatement.getName();
         ConsoleExpr expr = (ConsoleExpr) readStatement.getSource();
-        sb.append(name).assign();
+        sb.append("\t\t").append(name).assign();
         expr.visit((ASTVisitor) this, sb);
-        sb.semi();
+        sb.semi().newline();
         return sb;
     }
 
@@ -267,7 +268,7 @@ public class CodeGenVisitor implements ASTVisitor {
     public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws Exception {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         Expr expr = returnStatement.getExpr();
-        sb.append("return ");
+        sb.append("\t\treturn ");
         expr.visit((ASTVisitor) this, sb);
         sb.semi().newline();
         return sb;
