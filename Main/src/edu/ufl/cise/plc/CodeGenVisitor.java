@@ -4,6 +4,7 @@ import edu.ufl.cise.plc.ast.*;
 import edu.ufl.cise.plc.runtime.ConsoleIO;
 
 import java.util.List;
+import java.util.Locale;
 
 public class CodeGenVisitor implements ASTVisitor {
 
@@ -54,10 +55,14 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitNameDef(NameDef nameDef, Object arg) throws Exception {
-        CodeGenStringBuilder sb = new CodeGenStringBuilder();
-        Types.Type type = nameDef.getType();
-        String name = nameDef.getName();
-        sb.append(type.toString()).append(name).newline();
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+        if (nameDef.getType() == Types.Type.STRING){
+            sb.append("String ");
+        } else{
+            Types.Type type = nameDef.getType();
+            String name = nameDef.getName();
+            sb.append(type.toString().toLowerCase()).append(" ").append(name);
+        }
         return sb;
     }
 
@@ -67,20 +72,31 @@ public class CodeGenVisitor implements ASTVisitor {
     }
 
     public Object visitVarDeclaration(VarDeclaration varDeclaration, Object arg) throws Exception {
-        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         NameDef nameDef = varDeclaration.getNameDef();
         Expr expr = varDeclaration.getExpr();
         IToken.Kind op = varDeclaration.getOp().getKind();
         nameDef.visit((ASTVisitor) this, sb);
+        // if no initializer
         if (varDeclaration.getOp() == null) {
             sb.semi();
-        } else if (op == IToken.Kind.ASSIGN) {
+        } else {
+            if (op == IToken.Kind.ASSIGN){
+                sb.append("=");
+            } else if (op == IToken.Kind.LARROW){
+                sb.append("<-");
+            } else {
+                throw new UnsupportedOperationException("Invalid operator");
+            }
+            expr.visit(this, sb);
+        }
+        /*else if (op == IToken.Kind.ASSIGN) {
             throw new UnsupportedOperationException("Not implemented");
         } else {
             sb.append("=");
-            expr.visit((ASTVisitor) this, arg);
-        }
-        sb.newline();
+            expr.visit((ASTVisitor) this, arg);*/
+
+        sb.semi().newline();
         return sb;
     }
 
@@ -115,7 +131,7 @@ public class CodeGenVisitor implements ASTVisitor {
     }
 
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws Exception {
-        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         Types.Type type = binaryExpr.getType();
         Expr left = binaryExpr.getLeft();
         Expr right = binaryExpr.getRight();
