@@ -105,7 +105,7 @@ public class CodeGenVisitor implements ASTVisitor {
     }
 
     public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws Exception {
-        CodeGenStringBuilder sb = new CodeGenStringBuilder();
+        CodeGenStringBuilder sb = (CodeGenStringBuilder)arg;
         Expr condition = conditionalExpr.getCondition();
         Expr trueCase = conditionalExpr.getTrueCase();
         Expr falseCase = conditionalExpr.getFalseCase();
@@ -197,10 +197,10 @@ public class CodeGenVisitor implements ASTVisitor {
     public Object visitIntLitExpr(IntLitExpr intLitExpr, Object arg) throws Exception {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         int value = intLitExpr.getValue();
+        sb.append(value);
         if (intLitExpr.getCoerceTo() != null && intLitExpr.getCoerceTo() != Types.Type.INT) {
             genTypeConversion(intLitExpr.getType(), intLitExpr.getCoerceTo(), sb);
         }
-        sb.append(value);
         return sb;
     }
 
