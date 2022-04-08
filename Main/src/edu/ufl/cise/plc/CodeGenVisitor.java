@@ -144,16 +144,25 @@ public class CodeGenVisitor implements ASTVisitor {
         Types.Type leftType = left.getCoerceTo() != null ? left.getCoerceTo() : left.getType();
         Types.Type rightType = right.getCoerceTo() != null ? right.getCoerceTo() : right.getType();
         IToken.Kind op = binaryExpr.getOp().getKind();
+        if(op == IToken.Kind.NOT_EQUALS){
+            sb.append("!");
+        }
         sb.leftParen();
         left.visit((ASTVisitor) this, sb);
         if(leftType == Types.Type.STRING && rightType == Types.Type.STRING && op == IToken.Kind.EQUALS){
             sb.append(".equals").leftParen();
             right.visit((ASTVisitor) this, sb);
             sb.rightParen();
-        }else{
-            sb.append(binaryExpr.getOp().getText());
+            // != how to keep track of that
+        }else if(leftType == Types.Type.STRING && rightType == Types.Type.STRING && op == IToken.Kind.NOT_EQUALS) {
+            sb.append(".equals").leftParen();
             right.visit((ASTVisitor) this, sb);
+            sb.rightParen();
+        }else{
+                sb.append(binaryExpr.getOp().getText());
+                right.visit((ASTVisitor) this, sb);
         }
+        sb.delegate.toString().equals("hello");
         sb.rightParen();
 //        if (binaryExpr.getCoerceTo() != null && binaryExpr.getCoerceTo() != type) {
 //            genTypeConversion(type, binaryExpr.getCoerceTo(), sb);
@@ -262,7 +271,7 @@ public class CodeGenVisitor implements ASTVisitor {
     public Object visitWriteStatement(WriteStatement writeStatement, Object arg) throws Exception {
         Expr source = writeStatement.getSource();
         CodeGenStringBuilder sb = new CodeGenStringBuilder();
-//        ConsoleIO.console.println("hii");
+        ConsoleIO.console.println(source);
         sb.append("\t\t");
         return sb;
     }
