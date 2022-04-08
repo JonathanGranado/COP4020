@@ -99,8 +99,9 @@ public class CodeGenVisitor implements ASTVisitor {
                 sb.leftParen().append(coerceTo.toString().toLowerCase()).rightParen();
             }
             expr.visit(this, sb);
+            sb.semi();
         }
-        sb.semi().newline();
+        sb.newline();
         return sb;
     }
 
@@ -144,8 +145,14 @@ public class CodeGenVisitor implements ASTVisitor {
         IToken.Kind op = binaryExpr.getOp().getKind();
         sb.leftParen();
         left.visit((ASTVisitor) this, sb);
-        sb.append(binaryExpr.getOp().getText());
-        right.visit((ASTVisitor) this, sb);
+        if(leftType == Types.Type.STRING && rightType == Types.Type.STRING && op == IToken.Kind.EQUALS){
+            sb.append(".equals").leftParen();
+            right.visit((ASTVisitor) this, sb);
+            sb.rightParen();
+        }else{
+            sb.append(binaryExpr.getOp().getText());
+            right.visit((ASTVisitor) this, sb);
+        }
         sb.rightParen();
         if (binaryExpr.getCoerceTo() != type) {
             genTypeConversion(type, binaryExpr.getCoerceTo(), sb);
@@ -263,6 +270,9 @@ public class CodeGenVisitor implements ASTVisitor {
         String name = assignmentStatement.getName();
         Expr expr = assignmentStatement.getExpr();
         sb.append(name).assign();
+        if(expr.getType() != expr.getCoerceTo() && expr.getCoerceTo() != null){
+            sb.leftParen().append(expr.getCoerceTo().toString().toLowerCase()).rightParen();
+        }
         expr.visit((ASTVisitor) this, sb);
         sb.semi().newline();
         return sb;
