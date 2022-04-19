@@ -51,5 +51,16 @@
     </orderEntry>
     <orderEntry type="library" name="edu.ufl.cise.plc.runtimeV0" level="project" />
     <orderEntry type="library" name="edu.ufl.cise.plc.runtimeV0 (" level="project" />
+    <orderEntry type="module-library" exported="">
+      <library>
+        <CLASSES />
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$USER_HOME$/Downloads/edu.ufl.cise.plc.runtime_Assignment6.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="library" name="edu.ufl.cise.plc.runtime_Assignment6" level="project" />
+    <orderEntry type="library" name="edu.ufl.cise.plc.runtime_Assignment6 (2)" level="project" />
   </component>
 </module>

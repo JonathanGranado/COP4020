@@ -3,23 +3,11 @@ package edu.ufl.cise.plc.test;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
-import java.awt.Color;
-import java.awt.image.BufferedImage;
-import java.io.IOException;
-
 import org.junit.jupiter.api.Test;
 
-//import edu.ufl.cise.plc.CodeGenVisitor;
 import edu.ufl.cise.plc.CompilerComponentFactory;
-import edu.ufl.cise.plc.IParser;
-//import edu.ufl.cise.plc.ImageResources;
-import edu.ufl.cise.plc.TypeCheckException;
-import edu.ufl.cise.plc.TypeCheckVisitor;
 import edu.ufl.cise.plc.ast.ASTNode;
-import edu.ufl.cise.plc.ast.ASTVisitor;
 import edu.ufl.cise.plc.ast.Program;
-//import edu.ufl.cise.plc.runtime.ColorTuple;
-import edu.ufl.cise.plc.runtime.ConsoleIO;
 import edu.ufl.cise.plc.runtime.javaCompilerClassLoader.DynamicClassLoader;
 import edu.ufl.cise.plc.runtime.javaCompilerClassLoader.DynamicCompiler;
 
@@ -583,5 +571,83 @@ class Assignment5TestStarter {
 		});
 		show("Expected Exception:     " + e);
 	}
+
+	@Test
+	void testCalculator() throws Exception {
+		String input = """
+				int add()
+				int a <- console;
+				int b <- console;
+				int c = a + b;
+				write c -> console;
+				^c;
+				""";
+		displayResult(input,null);
+	}
+
+	@Test
+	void testLogString() throws Exception {
+		String input = """
+				string test()
+				string x;
+				x <- console;
+				write x -> console;
+				^x;
+				""";
+		displayResult(input,null);
+	}
+
+	@Test
+	void testReadInt1() throws Exception {
+	String input = """
+			int testReadInt1()
+			int x <- console;
+			^ x;
+			""";
+		displayResult(input, null);
+	}
+
+	@Test
+	void testReadString0() throws Exception {
+		String input = """
+					string testReadString0()
+					string x <- console;
+					^ x;
+				""";
+		displayResult(input, null);
+	}
+
+	@Test
+	void testReadString1() throws Exception {
+		String input = """
+					string testRead1()
+					string x;
+					x <- console;
+					^ x;
+				""";
+		displayResult(input, null);
+	}
+
+	@Test
+	void testReadBoolean0() throws Exception {
+		String input = """
+					boolean testReadBoolean0()
+					boolean x;
+					x <- console;
+					^ x;
+				""";
+		displayResult(input, null);
+	}
+
+	@Test
+	void testReadBoolean1() throws Exception {
+		String input = """
+					boolean testReadBoolean1()
+					boolean x <- console;
+					^ x;
+				""";
+		displayResult(input, null);
+	}
+
 
 }

@@ -3,11 +3,14 @@ package edu.ufl.cise.plc;
 import edu.ufl.cise.plc.IToken.Kind;
 import edu.ufl.cise.plc.ast.*;
 import edu.ufl.cise.plc.ast.Types.Type;
+import edu.ufl.cise.plc.runtime.*;
 
+import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.Map;
 
 import static edu.ufl.cise.plc.ast.Types.Type.*;
+import static edu.ufl.cise.plc.runtime.FileURLIO.readImage;
 
 public class TypeCheckVisitor implements ASTVisitor {
 
@@ -345,13 +348,31 @@ public class TypeCheckVisitor implements ASTVisitor {
         Expr rhs = declaration.getExpr();
         //If type of variable is Image, it must either have an initializer expression of type IMAGE, or a Dimension
         if (declaration.getType() == IMAGE) {
-            if (rhs != null) {
-                check(rhs.visit(this, arg) == IMAGE, declaration, "Initializer is not type IMAGE");
-            } else if(!hasDim){
-                throw new TypeCheckException("no image initializer or dimension for type IMAGE");
+            if(declaration.getDim() != null){
+                int height = Integer.parseInt(declaration.getDim().getHeight().getText());
+                int width = Integer.parseInt(declaration.getDim().getWidth().getText());
+                if(getOp(declaration) == Kind.ASSIGN){
+                    readImage(rhs.getText(), width, height);
+                }else if(rhs == null){
+                    BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+                }
+            }else{
+                if(getOp(declaration) == Kind.ASSIGN){
+                    readImage(declaration.getName());
+                }
             }
 
-        } else {
+//            if (rhs != null) {
+//                check(rhs.visit(this, arg) == IMAGE, declaration, "Initializer is not type IMAGE");
+//            } else if(!hasDim){
+//                throw new TypeCheckException("no image initializer or dimension for type IMAGE");
+//            }
+
+        }
+//        else if(declaration.getType() == COLOR){
+//            ColorTuple tuple = new ColorTuple();
+//        }
+            else {
             if (rhs != null) {
                 Declaration rhsDec = symbolTable.lookup(rhs.getText());
                 if (rhs.getClass() == IdentExpr.class) {

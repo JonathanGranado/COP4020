@@ -88,18 +88,19 @@ public class CodeGenVisitor implements ASTVisitor {
         } else {
             if (op.getKind() == IToken.Kind.ASSIGN){
                 sb.append("=");
+                if(expr.getCoerceTo() != null && expr.getCoerceTo() != expr.getType()){
+                    genTypeConversion(expr.getType(), expr.getCoerceTo(), sb);
+                }
+                expr.visit(this, sb);
             } else if (op.getKind() == IToken.Kind.LARROW){
-                sb.append("<-");
+                sb.append(" = ");
+                if(expr.getCoerceTo() != null && expr.getCoerceTo() != expr.getType()){
+                    genTypeConversion(expr.getType(), expr.getCoerceTo(), sb);
+                }
+                expr.visit(this, sb); // should be consoleExpr
             } else {
                 throw new UnsupportedOperationException("Invalid operator");
             }
-            if(expr.getCoerceTo() != null && expr.getCoerceTo() != expr.getType()){
-                // change this to genTypeConversion
-                genTypeConversion(expr.getType(), expr.getCoerceTo(), sb);
-//                Types.Type coerceTo = expr.getCoerceTo();
-//                sb.leftParen().append(coerceTo.toString().toLowerCase()).rightParen();
-            }
-            expr.visit(this, sb);
             sb.semi();
         }
         sb.newline();
@@ -162,12 +163,7 @@ public class CodeGenVisitor implements ASTVisitor {
                 sb.append(binaryExpr.getOp().getText());
                 right.visit((ASTVisitor) this, sb);
         }
-        sb.delegate.toString().equals("hello");
         sb.rightParen();
-//        if (binaryExpr.getCoerceTo() != null && binaryExpr.getCoerceTo() != type) {
-//            genTypeConversion(type, binaryExpr.getCoerceTo(), sb);
-//            sb.leftParen().append(binaryExpr.getCoerceTo().toString().toLowerCase()).rightParen();
-//        }
         return ((CodeGenStringBuilder) arg).append(sb.delegate.toString());
     }
 
@@ -181,19 +177,26 @@ public class CodeGenVisitor implements ASTVisitor {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         Types.Type coerceType = consoleExpr.getCoerceTo();
         String objectType = null;
-        if (coerceType == Types.Type.INT) {
-            objectType = "int";
-        } else if (coerceType == Types.Type.STRING) {
-            objectType = "String";
-        } else if (coerceType == Types.Type.BOOLEAN) {
-            objectType = "boolean";
-        } else if (coerceType == Types.Type.FLOAT) {
-            objectType = "float";
+//        if (coerceType == Types.Type.INT) {
+//            objectType = "int";
+//        } else if (coerceType == Types.Type.STRING) {
+//            objectType = "String";
+//        } else if (coerceType == Types.Type.BOOLEAN) {
+//            objectType = "boolean";
+//        } else if (coerceType == Types.Type.FLOAT) {
+//            objectType = "float";
+//        }
+//        sb.leftParen().append(objectType);
+//        sb.rightParen();
+        if(coerceType == Types.Type.STRING) {
+            sb.append("\"");
+            Object value = ConsoleIO.readValueFromConsole(coerceType.toString(), "Enter string: ");
+            sb.append(value);
+            sb.append("\"");
+        }else{
+            Object value = ConsoleIO.readValueFromConsole(coerceType.toString(), "Enter a " + coerceType.toString().toLowerCase() + ": ");
+            sb.append(value);
         }
-        sb.leftParen().append(objectType);
-        sb.rightParen();
-        Object value = ConsoleIO.readValueFromConsole(coerceType.toString(), "Enter value");
-        sb.append(value);
         return sb;
     }
 
@@ -271,7 +274,7 @@ public class CodeGenVisitor implements ASTVisitor {
     public Object visitWriteStatement(WriteStatement writeStatement, Object arg) throws Exception {
         Expr source = writeStatement.getSource();
         CodeGenStringBuilder sb = new CodeGenStringBuilder();
-        ConsoleIO.console.println(source);
+        ConsoleIO.console.println(source.visit(this, sb));
         sb.append("\t\t");
         return sb;
     }
@@ -280,10 +283,14 @@ public class CodeGenVisitor implements ASTVisitor {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         String name = assignmentStatement.getName();
         Expr expr = assignmentStatement.getExpr();
+//        if(assignmentStatement.getSelector() != null && expr.getType() == Types.Type.IMAGE){
+//            if(assignmentStatement.getSelector() != null){
+//
+//            }
+//        }
         sb.append(name).assign();
         if(expr.getCoerceTo() != null && expr.getType() != expr.getCoerceTo()){
             genTypeConversion(expr.getType(), expr.getCoerceTo(), sb);
-//            sb.leftParen().append(expr.getCoerceTo().toString().toLowerCase()).rightParen();
         }
         expr.visit((ASTVisitor) this, sb);
         sb.semi().newline();
