@@ -1,16 +1,11 @@
 package edu.ufl.cise.plc;
 
 import edu.ufl.cise.plc.ast.*;
-import edu.ufl.cise.plc.runtime.ColorTuple;
 import edu.ufl.cise.plc.runtime.ConsoleIO;
-import edu.ufl.cise.plc.runtime.FileURLIO;
 import edu.ufl.cise.plc.runtime.ImageOps;
 
-import javax.swing.event.ListDataEvent;
-import java.awt.image.BufferedImage;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
 
 public class CodeGenVisitor implements ASTVisitor {
 
@@ -26,32 +21,32 @@ public class CodeGenVisitor implements ASTVisitor {
         CodeGenStringBuilder sb = new CodeGenStringBuilder();
         sb.append("package ");
         sb.append(packageName).semi().newline();
-        if(program.getReturnType() == Types.Type.IMAGE){
+        if (program.getReturnType() == Types.Type.IMAGE) {
             sb.append("import java.awt.image.BufferedImage;").newline();
         }
         sb.append("import edu.ufl.cise.plc.runtime.*; ").newline();
         sb.append("public class ").append(program.getName()).append(" ").leftBrace().newline().append("\t public static ");
         if (program.getReturnType() == Types.Type.STRING) {
             sb.append("String");
-        }else if (program.getReturnType() == Types.Type.IMAGE) {
+        } else if (program.getReturnType() == Types.Type.IMAGE) {
             sb.append("BufferedImage");
-        }else if (program.getReturnType() == Types.Type.COLOR) {
+        } else if (program.getReturnType() == Types.Type.COLOR) {
             sb.append("ColorTuple");
-        }else{
+        } else {
             sb.append(program.getReturnType().toString().toLowerCase());
         }
         sb.append(" apply").leftParen();
 
         List<NameDef> list = program.getParams();
         Iterator<NameDef> iterator = list.iterator();
-        while (iterator.hasNext()){
+        while (iterator.hasNext()) {
             NameDef name = iterator.next();
             if (name.getType().toString().equals("STRING")) {
                 sb.append("String " + name.getName());
             } else {
                 sb.append(name.getType().toString().toLowerCase() + " " + name.getName());
             }
-            if(iterator.hasNext()){
+            if (iterator.hasNext()) {
                 sb.comma();
             }
         }
@@ -72,9 +67,11 @@ public class CodeGenVisitor implements ASTVisitor {
     @Override
     public Object visitNameDef(NameDef nameDef, Object arg) throws Exception {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
-        if (nameDef.getType() == Types.Type.STRING){
+        if (nameDef.getType() == Types.Type.STRING) {
             sb.append("String ").append(nameDef.getName());
-        } else{
+        } else if (nameDef.getType() == Types.Type.IMAGE) {
+            sb.append("BufferedImage ").append(nameDef.getName());
+        } else {
             Types.Type type = nameDef.getType();
             String name = nameDef.getName();
             sb.append(type.toString().toLowerCase()).append(" ").append(name);
@@ -98,8 +95,8 @@ public class CodeGenVisitor implements ASTVisitor {
         NameDef nameDef = varDeclaration.getNameDef();
         Expr expr = varDeclaration.getExpr();
         IToken op = varDeclaration.getOp();
-        if(varDeclaration.getType() == Types.Type.IMAGE) {
-            if(varDeclaration.getDim() != null) {
+        if (varDeclaration.getType() == Types.Type.IMAGE) {
+            if (varDeclaration.getDim() != null) {
                 if (op != null && op.getKind() == IToken.Kind.LARROW) {
                     String url = varDeclaration.getExpr().getText();
                     sb.append("BufferedImage " + varDeclaration.getNameDef().getName() + " = FileURLIO.readImage(");
@@ -108,22 +105,37 @@ public class CodeGenVisitor implements ASTVisitor {
                 } else {
                     nameDef.visit((ASTVisitor) this, sb);
                 }
-            }else{
-                if (op.getKind() == IToken.Kind.LARROW) {
+            } else {
+                if (op != null && op.getKind() == IToken.Kind.LARROW) {
                     String url = varDeclaration.getExpr().getText();
                     sb.append("BufferedImage " + varDeclaration.getNameDef().getName() + " = FileURLIO.readImage(").append(url).rightParen().semi();
+
+                }
+                // image being assigned another image
+                else if (op != null && op.getKind() == IToken.Kind.ASSIGN) {
+                    nameDef.visit((ASTVisitor) this, sb);
+                    if (varDeclaration.getDim() != null) {
+                        //TODO: Change to visit once PixelSelector is implemented
+                        sb.assign().append("ImageOps.resize(" + expr.getText() + ", " + varDeclaration.getDim().getHeight().getText() + ", " + varDeclaration.getDim().getHeight().getText()).rightParen().semi().newline();
+                    } else if (expr.getClass() == IdentExpr.class) {
+                        sb.assign().append("ImageOps.clone(" + expr.getText()).rightParen().semi().newline();
+                    } else {
+                        sb.assign();
+                        expr.visit(this, sb);
+                        sb.semi().newline();
+                    }
                 }
             }
-        }else {
+        } else {
             // if no initializer
             if (op == null) {
                 sb.semi();
             } else {
                 String name = varDeclaration.getNameDef().getName();
                 Types.Type type = varDeclaration.getNameDef().getType();
-                if(type == Types.Type.COLOR){
+                if (type == Types.Type.COLOR) {
                     sb.append("ColorTuple ");
-                }else{
+                } else {
                     sb.append(type.toString() + " ");
                 }
                 sb.append(name + " = ");
@@ -150,7 +162,7 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitUnaryExprPostfix(UnaryExprPostfix unaryExprPostfix, Object arg) throws Exception {
-        CodeGenStringBuilder sb = (CodeGenStringBuilder)arg;
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
 //        Expr x = unaryExprPostfix.getSelector().getX();
 //        Expr y = unaryExprPostfix.getSelector().getY();
 //
@@ -161,7 +173,7 @@ public class CodeGenVisitor implements ASTVisitor {
     }
 
     public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws Exception {
-        CodeGenStringBuilder sb = (CodeGenStringBuilder)arg;
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         Expr condition = conditionalExpr.getCondition();
         Expr trueCase = conditionalExpr.getTrueCase();
         Expr falseCase = conditionalExpr.getFalseCase();
@@ -177,7 +189,7 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitDimension(Dimension dimension, Object arg) throws Exception {
-        CodeGenStringBuilder sb = (CodeGenStringBuilder)arg;
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         Expr width = dimension.getWidth();
         Expr height = dimension.getHeight();
         width.visit(this, sb);
@@ -211,12 +223,17 @@ public class CodeGenVisitor implements ASTVisitor {
          */
         String operator = op.toString();
 
-        if(leftType == Types.Type.COLOR && rightType == Types.Type.COLOR){
+        if (leftType == Types.Type.COLOR && rightType == Types.Type.COLOR) {
+            //TODO: apply the enum thing to all
             sb.append("ImageOps.binaryTupleOp(");
             sb.append("ImageOps.OP." + operator);
-        sb.comma().append(left.getText()).comma().append(right.getText()).rightParen();
-        }else if(leftType == Types.Type.IMAGE && rightType== Types.Type.IMAGE ){
+            sb.comma().append(left.getText()).comma().append(right.getText()).rightParen();
+        } else if (leftType == Types.Type.IMAGE && rightType == Types.Type.IMAGE) {
             sb.append("ImageOps.binaryImageImageOp(").append(ImageOps.OP.valueOf(operator)).comma().append(left.getText()).comma().append(right.getText()).rightParen().semi();
+        } else if(leftType == Types.Type.IMAGE && rightType == Types.Type.INT /*|| leftType == Types.Type.INT && rightType == Types.Type.IMAGE*/) {
+            sb.append("ImageOps.binaryImageScalarOp(");
+            sb.append("ImageOps.OP." + operator);
+            sb.comma().append(left.getText()).comma().append(right.getText()).rightParen();
         }else {
 
 
@@ -252,16 +269,15 @@ public class CodeGenVisitor implements ASTVisitor {
     public Object visitConsoleExpr(ConsoleExpr consoleExpr, Object arg) throws Exception {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         Types.Type coerceType = consoleExpr.getCoerceTo();
-        if(coerceType == Types.Type.STRING) {
+        if (coerceType == Types.Type.STRING) {
             sb.append("\"");
             Object value = ConsoleIO.readValueFromConsole(coerceType.toString(), "Enter string: ");
             sb.append(value);
             sb.append("\"");
-        }else if(coerceType == Types.Type.COLOR){
+        } else if (coerceType == Types.Type.COLOR) {
             Object value = ConsoleIO.readValueFromConsole(coerceType.toString(), "Enter a three color values : ");
             sb.append(value);
-        }
-        else{
+        } else {
             Object value = ConsoleIO.readValueFromConsole(coerceType.toString(), "Enter a " + coerceType.toString().toLowerCase() + ": ");
             sb.append(value);
         }
@@ -337,27 +353,23 @@ public class CodeGenVisitor implements ASTVisitor {
             sb.leftParen().append(unaryExpr.getOp().getText());
             expr.visit((ASTVisitor) this, sb);
             sb.rightParen().newline();
-        }else if (op == IToken.Kind.COLOR_OP) {
+        } else if (op == IToken.Kind.COLOR_OP) {
             // if expr is INT it is interpreted as PACKED pixel
-            if (expr.getType() == Types.Type.INT || expr.getType() == Types.Type.COLOR){
-                if(op.toString().equals("getRed")){
+            if (expr.getType() == Types.Type.INT || expr.getType() == Types.Type.COLOR) {
+                if (op.toString().equals("getRed")) {
                     sb.append("(getRed(" + expr.getText() + "))");
-                }
-                else if(op.toString().equals("getGreen")){
+                } else if (op.toString().equals("getGreen")) {
                     sb.append("(getGreen(" + expr.getText() + "))");
 
-                }
-                else if(op.toString().equals("getBlue")){
+                } else if (op.toString().equals("getBlue")) {
                     sb.append("(getBlue(" + expr.getText() + "))");
                 }
-            }else if(expr.getType() == Types.Type.IMAGE){
-                if(op.toString().equals("getRed")){
+            } else if (expr.getType() == Types.Type.IMAGE) {
+                if (op.toString().equals("getRed")) {
                     sb.append("(extractRed(" + expr.getText() + "))");
-                }
-                else if(op.toString().equals("getGreen")){
+                } else if (op.toString().equals("getGreen")) {
                     sb.append("(extractGreen(" + expr.getText() + "))");
-                }
-                else if(op.toString().equals("getBlue")){
+                } else if (op.toString().equals("getBlue")) {
                     sb.append("(extractBlue(" + expr.getText() + "))");
                 }
             }
@@ -374,14 +386,14 @@ public class CodeGenVisitor implements ASTVisitor {
         ConsoleExpr expr = (ConsoleExpr) readStatement.getSource();
         String url = readStatement.getTargetDec().getText();
         Types.Type targetType = readStatement.getTargetDec().getType();
-        if(targetType == Types.Type.IMAGE){
-            if(readStatement.getSelector() != null){
+        if (targetType == Types.Type.IMAGE) {
+            if (readStatement.getSelector() != null) {
                 sb.append(name + " = FileURLIO.readImage(" + readStatement.getSource().visit(this, sb)).comma().append(readStatement.getSelector().visit(this, sb) + ");").newline();
-            }else{
+            } else {
                 sb.append(name + " = FileURLIO.readImage(" + readStatement.getSource().visit(this, sb)).append(");").semi().newline();
             }
             sb.append("FileURLIO.closeFiles()");
-        }else{
+        } else {
             sb.append("\t\t").append(name).assign();
             expr.visit((ASTVisitor) this, sb);
             sb.semi().newline();
@@ -391,9 +403,27 @@ public class CodeGenVisitor implements ASTVisitor {
 
     public Object visitWriteStatement(WriteStatement writeStatement, Object arg) throws Exception {
         Expr source = writeStatement.getSource();
-        CodeGenStringBuilder sb = new CodeGenStringBuilder();
-        ConsoleIO.console.println(source.visit(this, sb));
-        sb.append("\t\t");
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+
+        // if image -> console
+        if (source.getType() == Types.Type.IMAGE && writeStatement.getDest().getType() == Types.Type.CONSOLE) {
+            sb.append("ConsoleIO.displayImageOnScreen(" + source.getText() + ");");
+        }
+        // if writing to file
+        else if (writeStatement.getDest().getType() == Types.Type.STRING) {
+            // if writing from image to file
+            if (source.getType() == Types.Type.IMAGE) {
+                sb.append("FileURLIO.writeImage(" + source.getText() + ",  " + writeStatement.getDest().getText() + ");");
+            } else {
+                sb.append("FileURLIO.writeValue(" + source.getText() + ",  " + writeStatement.getDest().getText() + ");");
+            }
+        } else {
+            sb.append("ConsoleIO.console.println(" + source.getText() + ");");
+            //  ConsoleIO.console.println(source.visit(this, sb));
+            sb.append("\t\t");
+        }
+
+
         return sb;
     }
 
@@ -401,29 +431,34 @@ public class CodeGenVisitor implements ASTVisitor {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         String name = assignmentStatement.getName();
         Expr expr = assignmentStatement.getExpr(); // rhs
-        if(assignmentStatement.getSelector() != null && expr.getType() == Types.Type.IMAGE){
-            if(expr.getType() == Types.Type.COLOR){
-                //pixel selector is on left
+        if (assignmentStatement.getTargetDec().getType() == Types.Type.IMAGE
+                && expr.getType() == Types.Type.IMAGE) {
+            // if it has dimension
+            if (assignmentStatement.getSelector() != null) {
+                sb.append(name).assign().append("ImageOps.resize(" + assignmentStatement.getExpr().getText() + ", " + assignmentStatement.getSelector().getX().getText() + ", " + assignmentStatement.getSelector().getY().getText()).rightParen().semi().newline();
+            } else if (expr.getClass() == IdentExpr.class) {
+                sb.append(name).assign().append("ImageOps.clone(" + assignmentStatement.getExpr().getText()).rightParen().semi().newline();
+            } else {
+                sb.append(name).assign().append(expr.getText()).semi().newline();
+            }
 
+/*
+        if(assignmentStatement.getTargetDec().getType() == Types.Type.IMAGE && expr.getType() == Types.Type.IMAGE){
+            if(assignmentStatement.getTargetDec().getDim() != null){
+                sb.append("ImageOps.resize(").append(name, )
             }
         }
-
-//        if(assignmentStatement.getTargetDec().getType() == Types.Type.IMAGE && expr.getType() == Types.Type.IMAGE){
-//            if(assignmentStatement.getTargetDec().getDim() != null){
-//                sb.append("ImageOps.resize(").append(name, )
-//            }
-//        }
-
-//                sb.append("for(int x = 0; x < " + name + ".getWidth(); x++").newline();
-//                sb.append("\tfor(int y = 0; x < " + name + ".getHeight(); y++").newline();
-//                sb.append("\t\tImage")
-
+                sb.append("for(int x = 0; x < " + name + ".getWidth(); x++").newline();
+                sb.append("\tfor(int y = 0; x < " + name + ".getHeight(); y++").newline();
+                sb.append("\t\tImage")
+*/
+        } else {
         sb.append(name).assign();
-        if(expr.getCoerceTo() != null && expr.getType() != expr.getCoerceTo()){
+        if (expr.getCoerceTo() != null && expr.getType() != expr.getCoerceTo()) {
             genTypeConversion(expr.getType(), expr.getCoerceTo(), sb);
         }
         expr.visit((ASTVisitor) this, sb);
-        sb.semi().newline();
+        sb.semi().newline();}
         return sb;
     }
 
@@ -439,9 +474,9 @@ public class CodeGenVisitor implements ASTVisitor {
 
     private void genTypeConversion(Types.Type type, Types.Type coerceTo, CodeGenStringBuilder sb) {
 // should also handle if case is String
-        if(coerceTo == Types.Type.STRING){
+        if (coerceTo == Types.Type.STRING) {
             sb.leftParen().append("String").rightParen();
-        }else{
+        } else {
             sb.leftParen().append(coerceTo.toString().toLowerCase()).rightParen();
         }
     }

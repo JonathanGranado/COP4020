@@ -162,7 +162,8 @@ public class TypeCheckVisitor implements ASTVisitor {
                     if (rightType == COLOR) binaryExpr.getRight().setCoerceTo(COLORFLOAT);
                     resultType = COLORFLOAT;
                 } else if (leftType == IMAGE && rightType == IMAGE) resultType = IMAGE;
-                else if (leftType == IMAGE && rightType == INT) resultType = IMAGE;
+                else if (leftType == IMAGE && rightType == INT){
+                    resultType = IMAGE;}
                 else if ((leftType == INT || leftType == COLOR) && (rightType == INT || rightType == COLOR)) {
                     if (leftType == INT) binaryExpr.getLeft().setCoerceTo(COLOR);
                     if (rightType == INT) binaryExpr.getRight().setCoerceTo(COLOR);
@@ -347,8 +348,8 @@ public class TypeCheckVisitor implements ASTVisitor {
 
         Expr rhs = declaration.getExpr();
         //If type of variable is Image, it must either have an initializer expression of type IMAGE, or a Dimension
-        if (declaration.getType() == IMAGE) {
-            if (declaration.getDim() != null) {
+        if (declaration.getType() == IMAGE && declaration.getDim() != null) {
+
                 Expr width = declaration.getDim().getWidth();
                 Expr height = declaration.getDim().getHeight();
                 check(width.getClass() == IdentExpr.class, declaration, "dimension is not of type int");
@@ -365,7 +366,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 //                    readImage(declaration.getName());
 //                }
 //            }
-            }
+
         }
             else {
             if (rhs != null) {
