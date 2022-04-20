@@ -215,7 +215,7 @@ class Assignment6StarterTest {
                 ^b;
 
 				""";
-		String url = "https://www.ufl.edu/media/wwwufledu/images/nav/academics.jpg";
+		String url = "https://upload.wikimedia.org/wikipedia/commons/9/92/Albert_and_Alberta.jpg";
 		BufferedImage inputImage = FileURLIO.readImage(url);
 		int w = inputImage.getWidth();
 		int h = inputImage.getHeight();
@@ -241,7 +241,7 @@ class Assignment6StarterTest {
 				color f()
 				color a = <<50,60,70>>;
 				color b = <<13,14,15>>;
-				^ a+b;
+				^ a + b;
 				""";
 		check(input, new edu.ufl.cise.plc.runtime.ColorTuple(50 + 13, 60 + 14, 70 + 15));
 	}
@@ -269,7 +269,5 @@ class Assignment6StarterTest {
 		refImage.setRGB(0, 0, w,h, rgbArray, 0, w);
 		show(check(input, refImage));
 	}
-
-
 
 }

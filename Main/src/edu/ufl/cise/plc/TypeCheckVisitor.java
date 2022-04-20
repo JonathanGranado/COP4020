@@ -348,7 +348,7 @@ public class TypeCheckVisitor implements ASTVisitor {
         Expr rhs = declaration.getExpr();
         //If type of variable is Image, it must either have an initializer expression of type IMAGE, or a Dimension
         if (declaration.getType() == IMAGE) {
-            if(declaration.getDim() != null){
+            if (declaration.getDim() != null) {
                 Expr width = declaration.getDim().getWidth();
                 Expr height = declaration.getDim().getHeight();
                 check(width.getClass() == IdentExpr.class, declaration, "dimension is not of type int");
@@ -359,11 +359,12 @@ public class TypeCheckVisitor implements ASTVisitor {
 //                    readImage(rhs.getText(), height, height);
 //                }else if(rhs == null){
 //                    BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+//}
+//            }else{
+//                if(getOp(declaration) == Kind.ASSIGN){
+//                    readImage(declaration.getName());
 //                }
-            }else{
-                if(getOp(declaration) == Kind.ASSIGN){
-                    readImage(declaration.getName());
-                }
+//            }
             }
         }
             else {
