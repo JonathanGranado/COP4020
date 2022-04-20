@@ -2,8 +2,6 @@
   <library name="edu.ufl.cise.plc.runtime_Assignment6">
     <CLASSES />
     <JAVADOC />
-    <SOURCES>
-      <root url="jar://$PROJECT_DIR$/Main/src/edu/ufl/cise/plc/runtime/edu.ufl.cise.plc.runtime_Assignment6.jar!/" />
-    </SOURCES>
+    <SOURCES />
   </library>
 </component>

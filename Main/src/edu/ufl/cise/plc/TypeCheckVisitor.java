@@ -349,29 +349,23 @@ public class TypeCheckVisitor implements ASTVisitor {
         //If type of variable is Image, it must either have an initializer expression of type IMAGE, or a Dimension
         if (declaration.getType() == IMAGE) {
             if(declaration.getDim() != null){
-                int height = Integer.parseInt(declaration.getDim().getHeight().getText());
-                int width = Integer.parseInt(declaration.getDim().getWidth().getText());
-                if(getOp(declaration) == Kind.ASSIGN){
-                    readImage(rhs.getText(), width, height);
-                }else if(rhs == null){
-                    BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-                }
+                Expr width = declaration.getDim().getWidth();
+                Expr height = declaration.getDim().getHeight();
+                check(width.getClass() == IdentExpr.class, declaration, "dimension is not of type int");
+                check(height.getClass() == IdentExpr.class, declaration, "dimension is not of type int");
+//                int height = Integer.parseInt(declaration.getDim().getHeight().getText());
+//                int width = Integer.parseInt(declaration.getDim().getWidth().getText());
+//                if(getOp(declaration) == Kind.ASSIGN){
+//                    readImage(rhs.getText(), height, height);
+//                }else if(rhs == null){
+//                    BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
+//                }
             }else{
                 if(getOp(declaration) == Kind.ASSIGN){
                     readImage(declaration.getName());
                 }
             }
-
-//            if (rhs != null) {
-//                check(rhs.visit(this, arg) == IMAGE, declaration, "Initializer is not type IMAGE");
-//            } else if(!hasDim){
-//                throw new TypeCheckException("no image initializer or dimension for type IMAGE");
-//            }
-
         }
-//        else if(declaration.getType() == COLOR){
-//            ColorTuple tuple = new ColorTuple();
-//        }
             else {
             if (rhs != null) {
                 Declaration rhsDec = symbolTable.lookup(rhs.getText());
@@ -436,10 +430,10 @@ public class TypeCheckVisitor implements ASTVisitor {
     public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws Exception {
         Type returnType = root.getReturnType();  //This is why we save program in visitProgram.
         Type expressionType = (Type) returnStatement.getExpr().visit(this, arg);
-        if (returnStatement.getExpr().getClass() == IdentExpr.class){
-            Declaration dec = symbolTable.lookup(returnStatement.getExpr().getText());
-            check(dec.isInitialized(), returnStatement, "return rhs has not been initialized");
-        }
+//        if (returnStatement.getExpr().getClass() == IdentExpr.class){
+//            Declaration dec = symbolTable.lookup(returnStatement.getExpr().getText());
+//            check(dec.isInitialized(), returnStatement, "return rhs has not been initialized");
+//        }
         check(returnType == expressionType, returnStatement, "return statement with invalid type");
         return null;
     }

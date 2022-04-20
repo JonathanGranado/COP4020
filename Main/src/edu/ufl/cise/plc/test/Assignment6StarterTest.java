@@ -148,47 +148,6 @@ class Assignment6StarterTest {
 		FileURLIO.closeFiles();
 	}
 
-
-	void testCalculator() throws Exception {
-		String input = """
-				int add()
-				int a <- console;
-				int b <- console;
-				int c = a + b;
-				write c -> console;
-				^c;	
-				""";
-	}
-
-	void testLogString() throws Exception {
-
-	}
-
-	void testReadInt0() throws Exception {
-
-	}
-
-	void testReadInt1() throws Exception {
-
-	}
-
-	void testReadString0() throws Exception {
-
-	}
-
-	void testReadString1() throws Exception {
-
-	}
-
-	void testReadBoolean0() throws Exception {
-
-	}
-
-	void testReadBoolean1() throws Exception {
-
-	}
-
-
 	@Test
 	void lectureExample3() throws Exception {
 		String input = """
@@ -196,16 +155,18 @@ class Assignment6StarterTest {
 				      image[width,height] b <- url;
 				      ^b;
 				      """;
-		String url = "https://www.ufl.edu/media/wwwufledu/images/about/aerial_tigert_stadium.jpg";
+		String url = "https://upload.wikimedia.org/wikipedia/commons/9/92/Albert_and_Alberta.jpg";
 		Object[] params = { url, 300, 200 };
 		BufferedImage refImage = showRef(FileURLIO.readImage(url, 300, 200));
-		show(check(input, params, refImage));
+		show(
+				check(input, params, refImage));
 	}
 
 	@Test
 	void lectureExample4() throws Exception {
 		String input = """
-				image f(int widthAndHeight) image[widthAndHeight,widthAndHeight] a;
+				image f(int widthAndHeight) 
+							image[widthAndHeight,widthAndHeight] a;
 				            a[x,y] = <<x-y, 0, y-x>>;
 				            ^ a;
 				""";

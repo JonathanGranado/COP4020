@@ -2,6 +2,7 @@ package edu.ufl.cise.plc;
 
 import edu.ufl.cise.plc.ast.*;
 import edu.ufl.cise.plc.runtime.ConsoleIO;
+import edu.ufl.cise.plc.runtime.FileURLIO;
 
 import javax.swing.event.ListDataEvent;
 import java.util.Iterator;
@@ -22,11 +23,16 @@ public class CodeGenVisitor implements ASTVisitor {
         CodeGenStringBuilder sb = new CodeGenStringBuilder();
         sb.append("package ");
         sb.append(packageName).semi().newline();
+        if(program.getReturnType() == Types.Type.IMAGE){
+            sb.append("import java.awt.image.BufferedImage;").newline();
+        }
         sb.append("import edu.ufl.cise.plc.runtime.*; ").newline();
         sb.append("public class ").append(program.getName()).append(" ").leftBrace().newline().append("\t public static ");
         if (program.getReturnType() == Types.Type.STRING) {
             sb.append("String");
-        } else {
+        }else if (program.getReturnType() == Types.Type.IMAGE) {
+            sb.append("BufferedImage");
+        }else {
             sb.append(program.getReturnType().toString().toLowerCase());
         }
         sb.append(" apply").leftParen();
@@ -73,7 +79,13 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitNameDefWithDim(NameDefWithDim nameDefWithDim, Object arg) throws Exception {
-        return null;
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+        String name = nameDefWithDim.getName();
+        Dimension dim = nameDefWithDim.getDim();
+        sb.append("BufferedImage ").append(name).append(" = new BufferedImage(");
+        dim.visit((ASTVisitor) this, sb);
+        sb.comma().append("BufferedImage.TYPE_INT_RGB").rightParen();
+        return sb;
     }
 
     public Object visitVarDeclaration(VarDeclaration varDeclaration, Object arg) throws Exception {
@@ -81,27 +93,44 @@ public class CodeGenVisitor implements ASTVisitor {
         NameDef nameDef = varDeclaration.getNameDef();
         Expr expr = varDeclaration.getExpr();
         IToken op = varDeclaration.getOp();
-        nameDef.visit((ASTVisitor) this, sb);
-        // if no initializer
-        if (op == null) {
-            sb.semi();
-        } else {
-            if (op.getKind() == IToken.Kind.ASSIGN){
-                sb.append("=");
-                if(expr.getCoerceTo() != null && expr.getCoerceTo() != expr.getType()){
-                    genTypeConversion(expr.getType(), expr.getCoerceTo(), sb);
+        if(varDeclaration.getType() == Types.Type.IMAGE) {
+            if(varDeclaration.getDim() != null) {
+                if (op != null && op.getKind() == IToken.Kind.LARROW) {
+                    String url = varDeclaration.getExpr().getText();
+                    sb.append("BufferedImage " + varDeclaration.getNameDef().getName() + " = FileURLIO.readImage(");
+                    sb.append(url).comma().append(varDeclaration.getDim().getWidth().getText()).comma().append(varDeclaration.getDim().getHeight().getText()).rightParen().semi().newline();
+                    sb.append("\t\tFileURLIO.closeFiles();").newline();
+                } else {
+                    nameDef.visit((ASTVisitor) this, sb);
                 }
-                expr.visit(this, sb);
-            } else if (op.getKind() == IToken.Kind.LARROW){
-                sb.append(" = ");
-                if(expr.getCoerceTo() != null && expr.getCoerceTo() != expr.getType()){
-                    genTypeConversion(expr.getType(), expr.getCoerceTo(), sb);
+            }else{
+                if (op.getKind() == IToken.Kind.LARROW) {
+                    String url = varDeclaration.getExpr().getText();
+                    sb.append("BufferedImage " + varDeclaration.getNameDef().getName() + " = FileURLIO.readImage(").append(url).rightParen();
                 }
-                expr.visit(this, sb); // should be consoleExpr
-            } else {
-                throw new UnsupportedOperationException("Invalid operator");
             }
-            sb.semi();
+        }else {
+            // if no initializer
+            if (op == null) {
+                sb.semi();
+            } else {
+                if (op.getKind() == IToken.Kind.ASSIGN) {
+                    sb.append("=");
+                    if (expr.getCoerceTo() != null && expr.getCoerceTo() != expr.getType()) {
+                        genTypeConversion(expr.getType(), expr.getCoerceTo(), sb);
+                    }
+                    expr.visit(this, sb);
+                } else if (op.getKind() == IToken.Kind.LARROW) {
+                    sb.append(" = ");
+                    if (expr.getCoerceTo() != null && expr.getCoerceTo() != expr.getType()) {
+                        genTypeConversion(expr.getType(), expr.getCoerceTo(), sb);
+                    }
+                    expr.visit(this, sb); // should be consoleExpr
+                } else {
+                    throw new UnsupportedOperationException("Invalid operator");
+                }
+                sb.semi();
+            }
         }
         sb.newline();
         return sb;
@@ -109,7 +138,10 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitUnaryExprPostfix(UnaryExprPostfix unaryExprPostfix, Object arg) throws Exception {
-        return null;
+        CodeGenStringBuilder sb = (CodeGenStringBuilder)arg;
+        Expr x = unaryExprPostfix.getSelector().getX();
+        Expr y = unaryExprPostfix.getSelector().getY();
+        return sb;
     }
 
     public Object visitConditionalExpr(ConditionalExpr conditionalExpr, Object arg) throws Exception {
@@ -129,7 +161,13 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitDimension(Dimension dimension, Object arg) throws Exception {
-        return null;
+        CodeGenStringBuilder sb = (CodeGenStringBuilder)arg;
+        Expr width = dimension.getWidth();
+        Expr height = dimension.getHeight();
+        width.visit(this, sb);
+        sb.comma();
+        height.visit(this, sb);
+        return sb;
     }
 
     @Override
@@ -265,9 +303,15 @@ public class CodeGenVisitor implements ASTVisitor {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         String name = readStatement.getName();
         ConsoleExpr expr = (ConsoleExpr) readStatement.getSource();
-        sb.append("\t\t").append(name).assign();
-        expr.visit((ASTVisitor) this, sb);
-        sb.semi().newline();
+        String url = readStatement.getTargetDec().getText();
+        Types.Type targetType = readStatement.getTargetDec().getType();
+        if(targetType == Types.Type.IMAGE){
+
+        }else{
+            sb.append("\t\t").append(name).assign();
+            expr.visit((ASTVisitor) this, sb);
+            sb.semi().newline();
+        }
         return sb;
     }
 
@@ -282,12 +326,24 @@ public class CodeGenVisitor implements ASTVisitor {
     public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, Object arg) throws Exception {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         String name = assignmentStatement.getName();
-        Expr expr = assignmentStatement.getExpr();
-//        if(assignmentStatement.getSelector() != null && expr.getType() == Types.Type.IMAGE){
-//            if(assignmentStatement.getSelector() != null){
-//
-//            }
-//        }
+        Expr expr = assignmentStatement.getExpr(); // rhs
+        if(assignmentStatement.getSelector() != null && expr.getType() == Types.Type.IMAGE){
+            if(expr.getType() == Types.Type.COLOR){
+                //pixel selector is on left
+
+            }
+        }
+
+        if(assignmentStatement.getTargetDec().getType() == Types.Type.IMAGE && expr.getType() == Types.Type.IMAGE){
+            if(assignmentStatement.getTargetDec().getDim() != null){
+                sb.append("ImageOps.resize(").append(name, )
+            }
+        }
+
+//                sb.append("for(int x = 0; x < " + name + ".getWidth(); x++").newline();
+//                sb.append("\tfor(int y = 0; x < " + name + ".getHeight(); y++").newline();
+//                sb.append("\t\tImage")
+
         sb.append(name).assign();
         if(expr.getCoerceTo() != null && expr.getType() != expr.getCoerceTo()){
             genTypeConversion(expr.getType(), expr.getCoerceTo(), sb);
