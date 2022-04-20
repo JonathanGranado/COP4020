@@ -111,7 +111,7 @@ public class CodeGenVisitor implements ASTVisitor {
             }else{
                 if (op.getKind() == IToken.Kind.LARROW) {
                     String url = varDeclaration.getExpr().getText();
-                    sb.append("BufferedImage " + varDeclaration.getNameDef().getName() + " = FileURLIO.readImage(").append(url).rightParen();
+                    sb.append("BufferedImage " + varDeclaration.getNameDef().getName() + " = FileURLIO.readImage(").append(url).rightParen().semi();
                 }
             }
         }else {
@@ -376,9 +376,9 @@ public class CodeGenVisitor implements ASTVisitor {
         Types.Type targetType = readStatement.getTargetDec().getType();
         if(targetType == Types.Type.IMAGE){
             if(readStatement.getSelector() != null){
-                sb.append(name + " = FileURLIO.readImage(" + readStatement.getSource().visit(this, sb)).comma().append(readStatement.getSelector().visit(this, sb) + ")").semi().newline();
+                sb.append(name + " = FileURLIO.readImage(" + readStatement.getSource().visit(this, sb)).comma().append(readStatement.getSelector().visit(this, sb) + ");").newline();
             }else{
-                sb.append(name + " = FileURLIO.readImage(" + readStatement.getSource().visit(this, sb)).append(")").semi().newline();
+                sb.append(name + " = FileURLIO.readImage(" + readStatement.getSource().visit(this, sb)).append(");").semi().newline();
             }
             sb.append("FileURLIO.closeFiles()");
         }else{
