@@ -267,6 +267,7 @@ public class TypeCheckVisitor implements ASTVisitor {
             check(y.getClass() == IdentExpr.class, assignmentStatement, "y is not type identExpr");
             check(symbolTable.lookup(x.getText()) == null, assignmentStatement, "x is already declared");
             check(symbolTable.lookup(y.getText()) == null, assignmentStatement, "y is already declared");
+            assignmentStatement.setTargetDec(lhsDeclaration);
 //            x.setType();
             // declare and initialize local variables
             NameDef xDec = new NameDef(x.getFirstToken(), "int", x.getText());

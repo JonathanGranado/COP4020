@@ -86,7 +86,7 @@ public class CodeGenVisitor implements ASTVisitor {
         Dimension dim = nameDefWithDim.getDim();
         sb.append("BufferedImage ").append(name).append(" = new BufferedImage(");
         dim.visit((ASTVisitor) this, sb);
-        sb.comma().append("BufferedImage.TYPE_INT_RGB").rightParen();
+        sb.comma().append("BufferedImage.TYPE_INT_RGB").rightParen().semi();
         return sb;
     }
 
@@ -109,7 +109,6 @@ public class CodeGenVisitor implements ASTVisitor {
                 if (op != null && op.getKind() == IToken.Kind.LARROW) {
                     String url = varDeclaration.getExpr().getText();
                     sb.append("BufferedImage " + varDeclaration.getNameDef().getName() + " = FileURLIO.readImage(").append(url).rightParen().semi();
-
                 }
                 // image being assigned another image
                 else if (op != null && op.getKind() == IToken.Kind.ASSIGN) {
@@ -136,7 +135,7 @@ public class CodeGenVisitor implements ASTVisitor {
                 if (type == Types.Type.COLOR) {
                     sb.append("ColorTuple ");
                 } else {
-                    sb.append(type.toString() + " ");
+                    sb.append(type.toString().toLowerCase() + " ");
                 }
                 sb.append(name + " = ");
                 if (op.getKind() == IToken.Kind.ASSIGN) {
@@ -177,13 +176,13 @@ public class CodeGenVisitor implements ASTVisitor {
         Expr condition = conditionalExpr.getCondition();
         Expr trueCase = conditionalExpr.getTrueCase();
         Expr falseCase = conditionalExpr.getFalseCase();
-        sb.leftParen().leftParen();
+        sb.append("\t\t").leftParen();
         condition.visit((ASTVisitor) this, sb);
-        sb.rightParen().ternary();
+        sb.rightParen().ternary().newline().append("\t\t").leftParen();
         trueCase.visit((ASTVisitor) this, sb);
-        sb.colon();
+        sb.rightParen().colon().newline().append("\t\t").leftParen();
         falseCase.visit((ASTVisitor) this, sb);
-        sb.rightParen().newline();
+        sb.rightParen();
         return sb;
     }
 
@@ -315,7 +314,7 @@ public class CodeGenVisitor implements ASTVisitor {
     public Object visitColorConstExpr(ColorConstExpr colorConstExpr, Object arg) throws Exception {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         String name = colorConstExpr.getText();
-        sb.append("ColorTuple.unpack(Color." + name + ".getRGB())").semi();
+        sb.append("ColorTuple.unpack(Color." + name + ".getRGB())");
         return sb;
     }
 
@@ -430,17 +429,48 @@ public class CodeGenVisitor implements ASTVisitor {
     public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, Object arg) throws Exception {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         String name = assignmentStatement.getName();
-        Expr expr = assignmentStatement.getExpr(); // rhs
-        if (assignmentStatement.getTargetDec().getType() == Types.Type.IMAGE
-                && expr.getType() == Types.Type.IMAGE) {
-            // if it has dimension
-            if (assignmentStatement.getSelector() != null) {
-                sb.append(name).assign().append("ImageOps.resize(" + assignmentStatement.getExpr().getText() + ", " + assignmentStatement.getSelector().getX().getText() + ", " + assignmentStatement.getSelector().getY().getText()).rightParen().semi().newline();
-            } else if (expr.getClass() == IdentExpr.class) {
-                sb.append(name).assign().append("ImageOps.clone(" + assignmentStatement.getExpr().getText()).rightParen().semi().newline();
-            } else {
-                sb.append(name).assign().append(expr.getText()).semi().newline();
+        Expr rhs = assignmentStatement.getExpr(); // rhs
+        Declaration lhs = assignmentStatement.getTargetDec();
+        if(lhs != null && lhs.getType() == Types.Type.IMAGE && rhs.getType() == Types.Type.IMAGE){
+            if(lhs.getDim() != null){
+//                The assignment is implemented by evaluating the
+//                right hand size and calling ImageOps.resize.
+                sb.append(name).assign().append("ImageOps.resize(" + assignmentStatement.getExpr().getText() + ", " +
+                                                assignmentStatement.getSelector().getX().getText() + ", " +
+                                                assignmentStatement.getSelector().getY().getText()).rightParen().semi().newline();
+            }else{
+//                the image <name>  takes the size of the
+//                right hand side image.
             }
+        }else if (rhs.getClass() == IdentExpr.class){
+                sb.append(name).assign().append("ImageOps.clone(" + assignmentStatement.getExpr().getText()).rightParen().semi().newline();
+        }else if(rhs.getCoerceTo() == Types.Type.COLOR){
+            sb.append("for(int x = 0; x < " + name + ".getWidth(); x++)").newline();
+            sb.append("\tfor(int y = 0; y < " + name + ".getHeight(); y++)").newline();
+            sb.append("\t\tImageOps.setColor(" + name).comma().append("x,y,").newline();
+            rhs.visit(this, sb);
+            sb.rightParen().semi().newline();
+        }else if(rhs.getCoerceTo() == Types.Type.INT){
+//            the int is used as a single color component in a
+//            ColorTuple where all three color components have
+//            the value of the int.
+//            (The value is truncated,
+//            so values outside of [0, 256) will
+//            be either white or black.)
+            sb.append("in get coerce to int");
+        }
+
+//        if (assignmentStatement.getTargetDec() != null &&
+//                assignmentStatement.getTargetDec().getType() == Types.Type.IMAGE &&
+//                rhs.getType() == Types.Type.IMAGE) {
+//            // if it has dimension
+//            if (assignmentStatement.getSelector() != null) {
+//                sb.append(name).assign().append("ImageOps.resize(" + assignmentStatement.getExpr().getText() + ", " + assignmentStatement.getSelector().getX().getText() + ", " + assignmentStatement.getSelector().getY().getText()).rightParen().semi().newline();
+//            } else if (rhs.getClass() == IdentExpr.class) {
+//                sb.append(name).assign().append("ImageOps.clone(" + assignmentStatement.getExpr().getText()).rightParen().semi().newline();
+//            } else {
+//                sb.append(name).assign().append(rhs.getText()).semi().newline();
+//            }
 
 /*
         if(assignmentStatement.getTargetDec().getType() == Types.Type.IMAGE && expr.getType() == Types.Type.IMAGE){
@@ -452,12 +482,12 @@ public class CodeGenVisitor implements ASTVisitor {
                 sb.append("\tfor(int y = 0; x < " + name + ".getHeight(); y++").newline();
                 sb.append("\t\tImage")
 */
-        } else {
+        else {
         sb.append(name).assign();
-        if (expr.getCoerceTo() != null && expr.getType() != expr.getCoerceTo()) {
-            genTypeConversion(expr.getType(), expr.getCoerceTo(), sb);
+        if (rhs.getCoerceTo() != null && rhs.getType() != rhs.getCoerceTo()) {
+            genTypeConversion(rhs.getType(), rhs.getCoerceTo(), sb);
         }
-        expr.visit((ASTVisitor) this, sb);
+        rhs.visit((ASTVisitor) this, sb);
         sb.semi().newline();}
         return sb;
     }
