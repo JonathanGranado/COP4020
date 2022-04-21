@@ -3,14 +3,11 @@ package edu.ufl.cise.plc;
 import edu.ufl.cise.plc.IToken.Kind;
 import edu.ufl.cise.plc.ast.*;
 import edu.ufl.cise.plc.ast.Types.Type;
-import edu.ufl.cise.plc.runtime.*;
 
-import java.awt.image.BufferedImage;
 import java.util.List;
 import java.util.Map;
 
 import static edu.ufl.cise.plc.ast.Types.Type.*;
-import static edu.ufl.cise.plc.runtime.FileURLIO.readImage;
 
 public class TypeCheckVisitor implements ASTVisitor {
 
@@ -162,9 +159,9 @@ public class TypeCheckVisitor implements ASTVisitor {
                     if (rightType == COLOR) binaryExpr.getRight().setCoerceTo(COLORFLOAT);
                     resultType = COLORFLOAT;
                 } else if (leftType == IMAGE && rightType == IMAGE) resultType = IMAGE;
-                else if (leftType == IMAGE && rightType == INT){
-                    resultType = IMAGE;}
-                else if ((leftType == INT || leftType == COLOR) && (rightType == INT || rightType == COLOR)) {
+                else if (leftType == IMAGE && rightType == INT) {
+                    resultType = IMAGE;
+                } else if ((leftType == INT || leftType == COLOR) && (rightType == INT || rightType == COLOR)) {
                     if (leftType == INT) binaryExpr.getLeft().setCoerceTo(COLOR);
                     if (rightType == INT) binaryExpr.getRight().setCoerceTo(COLOR);
                     resultType = COLOR;
@@ -294,7 +291,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 
     @Override
     public Object visitWriteStatement(WriteStatement writeStatement, Object arg) throws Exception {
-       // left is source right is dest
+        // left is source right is dest
         Type sourceType = (Type) writeStatement.getSource().visit(this, arg);
         Type destType = (Type) writeStatement.getDest().visit(this, arg);
 //        writeStatement.getDest().setCoerceTo(sourceType);
@@ -310,7 +307,7 @@ public class TypeCheckVisitor implements ASTVisitor {
         String name = readStatement.getName();
         Declaration dec = symbolTable.lookup(name);
         Type type = (Type) readStatement.getSource().visit(this, arg);
-        if(type == CONSOLE){
+        if (type == CONSOLE) {
             readStatement.getSource().setCoerceTo(dec.getType());
         }
         check(readStatement.getSelector() == null, readStatement, "read statement cannot have PixelSelector");
@@ -336,10 +333,10 @@ public class TypeCheckVisitor implements ASTVisitor {
             if (declaration.getDim().getHeight().getClass() == IdentExpr.class) {
                 visitIdentExpr((IdentExpr) declaration.getDim().getHeight(), arg);
             }
-            if(declaration.getDim().getHeight().getClass() == IntLitExpr.class){
+            if (declaration.getDim().getHeight().getClass() == IntLitExpr.class) {
                 declaration.getDim().getHeight().setType(Type.INT);
             }
-            if(declaration.getDim().getWidth().getClass() == IntLitExpr.class){
+            if (declaration.getDim().getWidth().getClass() == IntLitExpr.class) {
                 declaration.getDim().getWidth().setType(Type.INT);
             }
             visitNameDefWithDim((NameDefWithDim) declaration.getNameDef(), arg);
@@ -350,26 +347,21 @@ public class TypeCheckVisitor implements ASTVisitor {
         Expr rhs = declaration.getExpr();
         //If type of variable is Image, it must either have an initializer expression of type IMAGE, or a Dimension
         if (declaration.getType() == IMAGE && declaration.getDim() != null) {
-
-                Expr width = declaration.getDim().getWidth();
-                Expr height = declaration.getDim().getHeight();
-                check(width.getClass() == IdentExpr.class, declaration, "dimension is not of type int");
-                check(height.getClass() == IdentExpr.class, declaration, "dimension is not of type int");
-//                int height = Integer.parseInt(declaration.getDim().getHeight().getText());
-//                int width = Integer.parseInt(declaration.getDim().getWidth().getText());
-//                if(getOp(declaration) == Kind.ASSIGN){
-//                    readImage(rhs.getText(), height, height);
-//                }else if(rhs == null){
-//                    BufferedImage bufferedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
-//}
-//            }else{
-//                if(getOp(declaration) == Kind.ASSIGN){
-//                    readImage(declaration.getName());
-//                }
-//            }
-
-        }
-            else {
+            Expr width = declaration.getDim().getWidth();
+            Expr height = declaration.getDim().getHeight();
+            // dimension must be eithet IntLitExpr or IdentExpr with type INT
+            check((width.getClass() == IdentExpr.class || width.getClass() == IntLitExpr.class), declaration, "width is not an int lit or a variable");
+            check((height.getClass() == IdentExpr.class || height.getClass() == IntLitExpr.class), declaration, "height is not an int lit or a variable");
+            // if type of dimension is IdentExpr, it must be an ident of type int and initialized
+            if (width.getClass() == IdentExpr.class) {
+                check(symbolTable.lookup(width.getText()).isInitialized(), declaration, "Width variable is not initialized");
+                check(symbolTable.lookup(width.getText()).getType() == INT, declaration, "Width variable is not int");
+            }
+            if (height.getClass() == IdentExpr.class) {
+                check(symbolTable.lookup(height.getText()).isInitialized(), declaration, "Height variable is not initialized");
+                check(symbolTable.lookup(height.getText()).getType() == INT, declaration, "Height variable is not int");
+            }
+        } else {
             if (rhs != null) {
                 Declaration rhsDec = symbolTable.lookup(rhs.getText());
                 if (rhs.getClass() == IdentExpr.class) {
@@ -382,7 +374,7 @@ public class TypeCheckVisitor implements ASTVisitor {
                     declaration.getNameDef().setInitialized(true);
                     declaration.getExpr().setCoerceTo(declaration.getType());
                 } else if (getOp(declaration) == Kind.LARROW) {
-                    if(rhsType == CONSOLE){
+                    if (rhsType == CONSOLE) {
                         declaration.getExpr().setCoerceTo(declaration.getType());
                     }
                     check(rhsType == CONSOLE || rhsType == STRING, declaration, "type of expression and declared type do not match");

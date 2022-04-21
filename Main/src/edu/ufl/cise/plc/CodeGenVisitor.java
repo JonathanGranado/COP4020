@@ -23,6 +23,7 @@ public class CodeGenVisitor implements ASTVisitor {
         sb.append(packageName).semi().newline();
         if (program.getReturnType() == Types.Type.IMAGE) {
             sb.append("import java.awt.image.BufferedImage;").newline();
+            //sb.append("import java.awt.Color;").newline();
         }
         sb.append("import edu.ufl.cise.plc.runtime.*; ").newline();
         sb.append("public class ").append(program.getName()).append(" ").leftBrace().newline().append("\t public static ");
