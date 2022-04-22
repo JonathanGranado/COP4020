@@ -252,7 +252,7 @@ class Assignment6StarterTest {
 				blue[x,y] = BLUE;
 				image[500,500] green;
 				green[a,b] = GREEN;
-				image[500,500] teal;
+				image teal;
 				teal[x,y] = blue[x,y] + green[x,y];
 				^teal;
 				""";

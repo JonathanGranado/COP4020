@@ -349,7 +349,7 @@ public class TypeCheckVisitor implements ASTVisitor {
         if (declaration.getType() == IMAGE && declaration.getDim() != null) {
             Expr width = declaration.getDim().getWidth();
             Expr height = declaration.getDim().getHeight();
-            // dimension must be eithet IntLitExpr or IdentExpr with type INT
+            // dimension must be either IntLitExpr or IdentExpr with type INT
             check((width.getClass() == IdentExpr.class || width.getClass() == IntLitExpr.class), declaration, "width is not an int lit or a variable");
             check((height.getClass() == IdentExpr.class || height.getClass() == IntLitExpr.class), declaration, "height is not an int lit or a variable");
             // if type of dimension is IdentExpr, it must be an ident of type int and initialized
@@ -440,7 +440,7 @@ public class TypeCheckVisitor implements ASTVisitor {
         unaryExprPostfix.getSelector().visit(this, arg);
         unaryExprPostfix.setType(Type.INT);
         unaryExprPostfix.setCoerceTo(COLOR);
-        return Type.COLOR;
+        return expType;
     }
 
     record Pair<T0, T1>(T0 t0, T1 t1) {
