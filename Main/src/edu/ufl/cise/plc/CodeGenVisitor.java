@@ -200,7 +200,16 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws Exception {
-        return null;
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+        String firstVar = pixelSelector.getX().getText();
+        String secondVar = pixelSelector.getY().getText();
+        String name = pixelSelector.getText();
+
+        sb.append("for(int " + firstVar + " = 0;" + firstVar + "< " + name + ".getWidth();" + firstVar + "++)").newline();
+        sb.append("\tfor(int " + secondVar + " = 0;" + secondVar + "< " + name + ".getWidth();" + secondVar + "++)").newline();
+        sb.append("\t\tImageOps.setColor(" + name).comma().append("firstVar,secondVar,").newline();
+        sb.rightParen().semi().newline();
+        return sb;
     }
 
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws Exception {
@@ -234,15 +243,19 @@ public class CodeGenVisitor implements ASTVisitor {
         if (leftCoerceType == Types.Type.COLOR && rightCoerceType == Types.Type.COLOR) {
             //TODO: apply the enum thing to all
             sb.append("ImageOps.binaryTupleOp(");
-            sb.append("ImageOps.OP." + operator);
+            if(operator.equals("EQUALS") || operator.equals("NOT_EQUALS")){
+                sb.append("ImageOps.BoolOP." + operator);
+            }else{
+                sb.append("ImageOps.OP." + operator);
+            }
             sb.comma();
 
             if (leftType == Types.Type.IMAGE || rightType == Types.Type.IMAGE) {
                 if (leftType == Types.Type.IMAGE) {
-                    sb.append("ColorTuple.unpack(" + left.getText() + ".getRGB(x,y)),");
+                    sb.append("ColorTuple.unpack(" + left.getText() + ".getRGB(firstVar,secondVar)),");
                 }
                 if (rightType == Types.Type.IMAGE) {
-                    sb.append("ColorTuple.unpack(" + right.getText() + ".getRGB(x,y)))");
+                    sb.append("ColorTuple.unpack(" + right.getText() + ".getRGB(firstVar,secondVar)))");
                 }
             } else {
                 sb.append(left.getText()).comma().append(right.getText()).rightParen();
@@ -250,12 +263,22 @@ public class CodeGenVisitor implements ASTVisitor {
         }
         // image op image -> binaryImageImageOp
         else if (leftCoerceType == Types.Type.IMAGE && rightCoerceType == Types.Type.IMAGE) {
-            sb.append("ImageOps.binaryImageImageOp(").append(ImageOps.OP.valueOf(operator)).comma().append(left.getText()).comma().append(right.getText()).rightParen().semi();
+            sb.append("ImageOps.binaryImageImageOp(");
+            if(operator.equals("EQUALS") || operator.equals("NOT_EQUALS")){
+                sb.append("ImageOps.BoolOP." + operator);
+            }else{
+                sb.append("ImageOps.OP." + operator);
+            }
+            sb.comma().append(left.getText()).comma().append(right.getText()).rightParen().semi();
         }
         // image op int -> binaryImageScalarOp
         else if (leftCoerceType == Types.Type.IMAGE && rightCoerceType == Types.Type.INT /*|| leftCoerceType == Types.Type.INT && rightCoerceType == Types.Type.IMAGE*/) {
             sb.append("ImageOps.binaryImageScalarOp(");
-            sb.append("ImageOps.OP." + operator);
+            if(operator.equals("EQUALS") || operator.equals("NOT_EQUALS")){
+                sb.append("ImageOps.BoolOP." + operator);
+            }else{
+                sb.append("ImageOps.OP." + operator);
+            }
             sb.comma().append(left.getText()).comma().append(right.getText()).rightParen();
         } else {
             if (op == IToken.Kind.NOT_EQUALS) {
@@ -451,67 +474,65 @@ public class CodeGenVisitor implements ASTVisitor {
     public Object visitAssignmentStatement(AssignmentStatement assignmentStatement, Object arg) throws Exception {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         String name = assignmentStatement.getName();
-        Expr rhs = assignmentStatement.getExpr(); // rhs
         Declaration lhs = assignmentStatement.getTargetDec();
-        if (lhs != null && lhs.getType() == Types.Type.IMAGE && rhs.getType() == Types.Type.IMAGE) {
-            if (lhs.getDim() != null) {
-//                The assignment is implemented by evaluating the
-//                right hand size and calling ImageOps.resize.
-                sb.append(name).assign().append("ImageOps.resize(" + assignmentStatement.getExpr().getText() + ", " +
-                        assignmentStatement.getSelector().getX().getText() + ", " +
-                        assignmentStatement.getSelector().getY().getText()).rightParen().semi().newline();
-            } else {
-//                the image <name>  takes the size of the
-//                right hand side image.
-            }
-        } else if (rhs.getClass() == IdentExpr.class) {
-            sb.append(name).assign().append("ImageOps.clone(" + assignmentStatement.getExpr().getText()).rightParen().semi().newline();
-        } else if (rhs.getCoerceTo() == Types.Type.COLOR) {
-            sb.append("for(int x = 0; x < " + name + ".getWidth(); x++)").newline();
-            sb.append("\tfor(int y = 0; y < " + name + ".getHeight(); y++)").newline();
-            sb.append("\t\tImageOps.setColor(" + name).comma().append("x,y,").newline();
-            rhs.visit(this, sb);
-            sb.rightParen().semi().newline();
-        } else if (rhs.getCoerceTo() == Types.Type.INT) {
-//            the int is used as a single color component in a
-//            ColorTuple where all three color components have
-//            the value of the int.
-//            (The value is truncated,
-//            so values outside of [0, 256) will
-//            be either white or black.)
-            sb.append("in get coerce to int");
-        }
-
-//        if (assignmentStatement.getTargetDec() != null &&
-//                assignmentStatement.getTargetDec().getType() == Types.Type.IMAGE &&
-//                rhs.getType() == Types.Type.IMAGE) {
-//            // if it has dimension
-//            if (assignmentStatement.getSelector() != null) {
-//                sb.append(name).assign().append("ImageOps.resize(" + assignmentStatement.getExpr().getText() + ", " + assignmentStatement.getSelector().getX().getText() + ", " + assignmentStatement.getSelector().getY().getText()).rightParen().semi().newline();
-//            } else if (rhs.getClass() == IdentExpr.class) {
-//                sb.append(name).assign().append("ImageOps.clone(" + assignmentStatement.getExpr().getText()).rightParen().semi().newline();
+        Expr rhs = assignmentStatement.getExpr();
+        lhs.visit(this, sb);
+        sb.append(" = ");
+//        if (lhs != null && lhs.getType() == Types.Type.IMAGE && rhs.getType() == Types.Type.IMAGE) {
+//            if (lhs.getDim() != null) {
+////                The assignment is implemented by evaluating the
+////                right hand size and calling ImageOps.resize.
+//                sb.append(name).assign().append("ImageOps.resize(" + assignmentStatement.getExpr().getText() + ", " +
+//                        assignmentStatement.getSelector().getX().getText() + ", " +
+//                        assignmentStatement.getSelector().getY().getText()).rightParen().semi().newline();
 //            } else {
-//                sb.append(name).assign().append(rhs.getText()).semi().newline();
+////                the image <name>  takes the size of the
+////                right hand side image.
 //            }
-
-/*
-        if(assignmentStatement.getTargetDec().getType() == Types.Type.IMAGE && expr.getType() == Types.Type.IMAGE){
-            if(assignmentStatement.getTargetDec().getDim() != null){
-                sb.append("ImageOps.resize(").append(name, )
-            }
-        }
-                sb.append("for(int x = 0; x < " + name + ".getWidth(); x++").newline();
-                sb.append("\tfor(int y = 0; x < " + name + ".getHeight(); y++").newline();
-                sb.append("\t\tImage")
-*/
-        else {
+//        } else if (rhs.getClass() == IdentExpr.class) {
+//            sb.append(name).assign().append("ImageOps.clone(" + assignmentStatement.getExpr().getText()).rightParen().semi().newline();
+//        } else if (rhs.getCoerceTo() == Types.Type.COLOR) {
+//            sb.append("for(int firstVar = 0; firstVar < " + name + ".getWidth(); firstVar++)").newline();
+//            sb.append("\tfor(int secondVar = 0; secondVar < " + name + ".getHeight(); secondVar++)").newline();
+//            sb.append("\t\tImageOps.setColor(" + name).comma().append("firstVar,secondVar,").newline();
+//            rhs.visit(this, sb);
+//            sb.rightParen().semi().newline();
+//        } else if (rhs.getCoerceTo() == Types.Type.INT) {
+////            the int is used as a single color component in a
+////            ColorTuple where all three color components have
+////            the value of the int.
+////            (The value is truncated,
+////            so values outside of [0, 256) will
+////            be either white or black.)
+//            sb.append("in get coerce to int");
+//        }
+//
+////        if (assignmentStatement.getTargetDec() != null &&
+////                assignmentStatement.getTargetDec().getType() == Types.Type.IMAGE &&
+////                rhs.getType() == Types.Type.IMAGE) {
+////            // if it has dimension
+////            if (assignmentStatement.getSelector() != null) {
+////                sb.append(name).assign().append("ImageOps.resize(" + assignmentStatement.getExpr().getText() + ", " + assignmentStatement.getSelector().getX().getText() + ", " + assignmentStatement.getSelector().getY().getText()).rightParen().semi().newline();
+////            } else if (rhs.getClass() == IdentExpr.class) {
+////                sb.append(name).assign().append("ImageOps.clone(" + assignmentStatement.getExpr().getText()).rightParen().semi().newline();
+////            } else {
+////                sb.append(name).assign().append(rhs.getText()).semi().newline();
+////            }
+//
+///*
+//        if(assignmentStatement.getTargetDec().getType() == Types.Type.IMAGE && expr.getType() == Types.Type.IMAGE){
+//            if(assignmentStatement.getTargetDec().getDim() != null){
+//                sb.append("ImageOps.resize(").append(name, )
+//            }
+//        }
+//*/
+//        else {
             sb.append(name).assign();
             if (rhs.getCoerceTo() != null && rhs.getType() != rhs.getCoerceTo()) {
                 genTypeConversion(rhs.getType(), rhs.getCoerceTo(), sb);
             }
             rhs.visit((ASTVisitor) this, sb);
             sb.semi().newline();
-        }
         return sb;
     }
 
