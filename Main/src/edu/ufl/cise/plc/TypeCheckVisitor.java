@@ -440,7 +440,7 @@ public class TypeCheckVisitor implements ASTVisitor {
         unaryExprPostfix.getSelector().visit(this, arg);
         unaryExprPostfix.setType(Type.INT);
         unaryExprPostfix.setCoerceTo(COLOR);
-        return Type.COLOR;
+        return expType;
     }
 
     record Pair<T0, T1>(T0 t0, T1 t1) {
