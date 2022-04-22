@@ -21,10 +21,8 @@ public class CodeGenVisitor implements ASTVisitor {
         CodeGenStringBuilder sb = new CodeGenStringBuilder();
         sb.append("package ");
         sb.append(packageName).semi().newline();
-        if (program.getReturnType() == Types.Type.IMAGE) {
-            sb.append("import java.awt.image.BufferedImage;").newline();
-            sb.append("import java.awt.Color;").newline();
-        }
+        sb.append("import java.awt.image.BufferedImage;").newline();
+        sb.append("import java.awt.Color;").newline();
         sb.append("import edu.ufl.cise.plc.runtime.*; ").newline();
         sb.append("public class ").append(program.getName()).append(" ").leftBrace().newline().append("\t public static ");
         if (program.getReturnType() == Types.Type.STRING) {
@@ -44,6 +42,11 @@ public class CodeGenVisitor implements ASTVisitor {
             NameDef name = iterator.next();
             if (name.getType().toString().equals("STRING")) {
                 sb.append("String " + name.getName());
+            } else if (name.getType().toString().equals("IMAGE")){
+                sb.append(("BufferedImage "+ name.getName()));
+            }else if (name.getType().toString().equals("COLOR")) {
+                sb.append(("ColorTuple "+ name.getName()));
+
             } else {
                 sb.append(name.getType().toString().toLowerCase() + " " + name.getName());
             }
@@ -115,10 +118,9 @@ public class CodeGenVisitor implements ASTVisitor {
                 else if (op != null && op.getKind() == IToken.Kind.ASSIGN) {
                     nameDef.visit((ASTVisitor) this, sb);
                     if (varDeclaration.getDim() != null) {
-                        //TODO: Change to visit once PixelSelector is implemented
-                        sb.assign().append("ImageOps.resize(" + expr.getText() + ", " + varDeclaration.getDim().getHeight().getText() + ", " + varDeclaration.getDim().getHeight().getText()).rightParen().semi().newline();
+                        expr.visit(this, sb);
                     } else if (expr.getClass() == IdentExpr.class) {
-                        sb.assign().append("ImageOps.clone(" + expr.getText()).rightParen().semi().newline();
+                        expr.visit(this, sb);
                     } else {
                         sb.assign();
                         expr.visit(this, sb);
@@ -140,9 +142,9 @@ public class CodeGenVisitor implements ASTVisitor {
                 }
                 sb.append(name + " = ");
                 if (op.getKind() == IToken.Kind.ASSIGN) {
-                    if (expr.getCoerceTo() != null && expr.getCoerceTo() != expr.getType()) {
-                        genTypeConversion(expr.getType(), expr.getCoerceTo(), sb);
-                    }
+//                    if (expr.getCoerceTo() != null && expr.getCoerceTo() != expr.getType()) {
+//                        genTypeConversion(expr.getType(), expr.getCoerceTo(), sb);
+//                    }
                     expr.visit(this, sb);
                 } else if (op.getKind() == IToken.Kind.LARROW) {
                     sb.append(" = ");
@@ -163,12 +165,11 @@ public class CodeGenVisitor implements ASTVisitor {
     @Override
     public Object visitUnaryExprPostfix(UnaryExprPostfix unaryExprPostfix, Object arg) throws Exception {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
-//        Expr x = unaryExprPostfix.getSelector().getX();
-//        Expr y = unaryExprPostfix.getSelector().getY();
-//
-//
-//
-//        ColorTuple.unpack(.getRGB(0, 1));
+        Expr expr = unaryExprPostfix.getExpr();
+        String x = unaryExprPostfix.getSelector().getX().getText();
+        String y = unaryExprPostfix.getSelector().getY().getText();
+        sb.append("ColorTuple.unpack(" + expr + ".getRGB(" + x + ", " + y + "))");
+
         return null;
     }
 
@@ -200,7 +201,14 @@ public class CodeGenVisitor implements ASTVisitor {
 
     @Override
     public Object visitPixelSelector(PixelSelector pixelSelector, Object arg) throws Exception {
-        return null;
+        CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
+        String firstVar = pixelSelector.getX().getText();
+        String secondVar = pixelSelector.getY().getText();
+        String name = pixelSelector.getText();
+
+        sb.append("for(int " + firstVar + " = 0;" + firstVar + "< " + name + ".getWidth();" + firstVar + "++)").newline();
+        sb.append("\tfor(int " + secondVar + " = 0;" + secondVar + "< " + name + ".getWidth();" + secondVar + "++)").newline();
+        return sb;
     }
 
     public Object visitBinaryExpr(BinaryExpr binaryExpr, Object arg) throws Exception {
