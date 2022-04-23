@@ -485,6 +485,7 @@ public class CodeGenVisitor implements ASTVisitor {
         if (lhs!=null && lhs.getType() == Types.Type.IMAGE){
             if (lhs.getDim() != null){
                 if (rhs.getCoerceTo() == Types.Type.COLOR){
+                    lhs.getDim().visit(this,sb);
 
                 }
             }
