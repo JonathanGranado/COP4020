@@ -439,7 +439,7 @@ public class TypeCheckVisitor implements ASTVisitor {
         check(expType == Type.IMAGE, unaryExprPostfix, "pixel selector can only be applied to image");
         unaryExprPostfix.getSelector().visit(this, arg);
         unaryExprPostfix.setType(Type.INT);
-        unaryExprPostfix.setCoerceTo(COLOR);
+        unaryExprPostfix.setCoerceTo(expType);
         return expType;
     }
 
