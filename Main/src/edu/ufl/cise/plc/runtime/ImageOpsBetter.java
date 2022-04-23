@@ -4,6 +4,7 @@ import java.awt.*;
 import java.awt.geom.AffineTransform;
 import java.awt.image.AffineTransformOp;
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 
 /**
  * An image is represented by a 2D array of pixels. An image is implemented
@@ -239,6 +240,17 @@ public class ImageOpsBetter {
             }
         }
         return result;
+    }
+
+    public static boolean equals(BufferedImage image0, BufferedImage image1) {
+        int[] pixels0 = image0.getRGB(0,0,image0.getWidth(), image0.getHeight(), null,0,image0.getWidth());
+        int[] pixels1 = image1.getRGB(0,0,image1.getWidth(), image1.getHeight(), null,0,image1.getWidth());
+        return Arrays.equals(pixels0, pixels1);
+    }
+    public static boolean notEquals(BufferedImage image0, BufferedImage image1) {
+        int[] pixels0 = image0.getRGB(0,0,image0.getWidth(), image0.getHeight(), null,0,image0.getWidth());
+        int[] pixels1 = image1.getRGB(0,0,image1.getWidth(), image1.getHeight(), null,0,image1.getWidth());
+        return !(Arrays.equals(pixels0, pixels1));
     }
 
     /**
