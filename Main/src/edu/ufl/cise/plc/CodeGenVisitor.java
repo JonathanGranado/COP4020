@@ -89,7 +89,7 @@ public class CodeGenVisitor implements ASTVisitor {
         Dimension dim = nameDefWithDim.getDim();
         sb.append("BufferedImage ").append(name).append(" = new BufferedImage(");
         dim.visit((ASTVisitor) this, sb);
-        sb.comma().append("BufferedImage.TYPE_INT_RGB").rightParen().semi();
+        sb.comma().append("BufferedImage.TYPE_INT_RGB").rightParen();
         return sb;
     }
 
@@ -115,7 +115,6 @@ public class CodeGenVisitor implements ASTVisitor {
                 }
                 // image being assigned another image
                 else if (op != null && op.getKind() == IToken.Kind.ASSIGN) {
-
                     nameDef.visit((ASTVisitor) this, sb);
                     if (varDeclaration.getDim() != null) {
                         expr.visit(this, sb);
@@ -226,17 +225,13 @@ public class CodeGenVisitor implements ASTVisitor {
 
         // image op image -> binaryImageImageOp
         if (leftType == Types.Type.IMAGE && rightType == Types.Type.IMAGE) {
-
-            if (operator.equals("EQUALS")) {
-                sb.append("ImageOpsBetter.equals(");
-            } else if (operator.equals("NOT_EQUALS")) {
-                sb.append("ImageOpsBetter.notEquals(");
+            sb.append("ImageOpsBetter.binaryImageImageOp(");
+            if (operator.equals("EQUALS") || operator.equals("NOT_EQUALS")) {
+                sb.append("ImageOpsBetter.BoolOP." + operator);
             } else {
-                sb.append("ImageOpsBetter.binaryImageImageOp(");
                 sb.append("ImageOpsBetter.OP." + operator);
-                sb.comma();
             }
-
+            sb.comma();
             left.visit(this, sb);
             sb.comma();
             right.visit(this, sb);
@@ -485,35 +480,32 @@ public class CodeGenVisitor implements ASTVisitor {
         String name = assignmentStatement.getName();
         Declaration lhs = assignmentStatement.getTargetDec();
         Expr rhs = assignmentStatement.getExpr();
-        Dimension dim = lhs.getDim();
 
-        if (lhs != null && lhs.getType() == Types.Type.IMAGE && rhs.getType() == Types.Type.IMAGE) {
-            if (dim != null) {
-                sb.append("ImageOpsBetter.resize(");
-                if (rhs.getCoerceTo() == Types.Type.COLOR) {
-                    // TODO: for loop
-                    sb.append("ImageOpsBetter.setColor(" + lhs.getText()).comma();
-                    rhs.visit(this, sb); // the image on the right
-                    sb.append(lhs.getDim().getWidth().getText() + "," + lhs.getDim().getHeight().getText()).comma();
-                    visitColorExpr((ColorExpr) rhs, sb);
-                    sb.rightParen();
-                } else if (rhs.getCoerceTo() == Types.Type.INT) {
-                    // TODO: for loop
-                    sb.append("ImageOpsBetter.setColor(" + lhs.getText()).comma();
-                    rhs.visit(this, sb);// image on the right
-                    sb.append(lhs.getDim().getWidth().getText() + "," + lhs.getDim().getHeight().getText()).comma();
-                    visitColorExpr((ColorExpr) rhs, sb);
-                    sb.rightParen();
+
+        if (lhs!=null && lhs.getType() == Types.Type.IMAGE){
+            if (lhs.getDim() != null){
+                if (rhs.getCoerceTo() == Types.Type.COLOR){
+
                 }
             }
-            // if NOT declared with dimension/size
-            else {
-                sb.append("ImageOpsBetter.clone(");
-                rhs.visit(this, sb);
-            }
-            sb.rightParen().semi();
+        }
+        // if the namedef for assignment statement is an image and has dimension and expr.coerceTo is color
 
-        } else {
+        /*if (lhs != null && lhs.getType() == Types.Type.IMAGE && rhs.getType() == Types.Type.IMAGE) {
+            if (lhs.getDim() != null) {
+                sb.append(name).assign().append("ImageOpsBetter.resize(" + rhs.visit(this, sb) + ")").semi().newline();
+            } else {
+//                the image <name>  takes the size of the
+//                right hand side image.
+                if (rhs.getClass() == IdentExpr.class) {
+                    sb.append(name).assign().append("ImageOpsBetter.clone(" + rhs.getText());
+                } else if (rhs.getCoerceTo() == Types.Type.COLOR) {
+                    rhs.visit(this, sb);
+                } else if (rhs.getCoerceTo() == Types.Type.INT) {
+                    rhs.visit(this, sb);
+                }
+            }
+        } else*/ {
             sb.append(name).assign();
             if (rhs.getCoerceTo() != null && rhs.getType() != rhs.getCoerceTo()) {
                 genTypeConversion(rhs.getType(), rhs.getCoerceTo(), sb);
