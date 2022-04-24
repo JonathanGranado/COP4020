@@ -202,7 +202,7 @@ public class TypeCheckVisitor implements ASTVisitor {
         Type falseCase = (Type) conditionalExpr.getFalseCase().visit(this, arg);
 
         check(condition == BOOLEAN, conditionalExpr, "type of condition must be boolean");
-        check(trueCase == falseCase, conditionalExpr, "type of true case must be equal to false case");
+//        check(trueCase == falseCase, conditionalExpr, "type of true case must be equal to false case");
         conditionalExpr.setType(trueCase);
         return trueCase;
     }
@@ -361,7 +361,10 @@ public class TypeCheckVisitor implements ASTVisitor {
                 check(symbolTable.lookup(height.getText()).isInitialized(), declaration, "Height variable is not initialized");
                 check(symbolTable.lookup(height.getText()).getType() == INT, declaration, "Height variable is not int");
             }
-        } else {
+        }else if(declaration.getType() == IMAGE && declaration.getDim() == null){
+            check(declaration.getOp() != null, declaration, "Image must have an iniatilizer expression");
+        }
+            else {
             if (rhs != null) {
                 Declaration rhsDec = symbolTable.lookup(rhs.getText());
                 if (rhs.getClass() == IdentExpr.class) {
@@ -409,6 +412,12 @@ public class TypeCheckVisitor implements ASTVisitor {
 
     @Override
     public Object visitNameDef(NameDef nameDef, Object arg) throws Exception {
+        if(symbolTable.lookup(nameDef.getName()) != null){
+            throw new TypeCheckException("variable already used");
+        }
+//        if(root.getParams().contains(nameDef.getName())){
+//            throw new TypeCheckException("variable is used in params");
+//        }
         symbolTable.insert(nameDef.getName(), nameDef);
         return null;
     }
@@ -425,10 +434,8 @@ public class TypeCheckVisitor implements ASTVisitor {
     public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws Exception {
         Type returnType = root.getReturnType();  //This is why we save program in visitProgram.
         Type expressionType = (Type) returnStatement.getExpr().visit(this, arg);
-//        if (returnStatement.getExpr().getClass() == IdentExpr.class){
-//            Declaration dec = symbolTable.lookup(returnStatement.getExpr().getText());
-//            check(dec.isInitialized(), returnStatement, "return rhs has not been initialized");
-//        }
+//        Declaration dec = symbolTable.lookup(returnStatement.getExpr().getText());
+//        check(dec.isInitialized(), returnStatement, "return rhs has not been initialized");
         check(returnType == expressionType, returnStatement, "return statement with invalid type");
         return null;
     }

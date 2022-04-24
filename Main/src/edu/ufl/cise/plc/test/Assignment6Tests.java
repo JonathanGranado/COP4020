@@ -1963,6 +1963,7 @@ public class Assignment6Tests {
 		checkProgram(input, refImage);
 	}
 
+
 	@Test
 	void testScannerInput0() throws Exception {
 		String input = """
