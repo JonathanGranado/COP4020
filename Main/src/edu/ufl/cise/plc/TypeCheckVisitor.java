@@ -256,7 +256,7 @@ public class TypeCheckVisitor implements ASTVisitor {
                 assignmentStatement.getExpr().setCoerceTo(COLORFLOAT);
 
         } else {
-
+        // if lhs is an image with a pixel selector
             PixelSelector selector = assignmentStatement.getSelector();
             Expr x = selector.getX();
             Expr y = selector.getY();
@@ -362,7 +362,11 @@ public class TypeCheckVisitor implements ASTVisitor {
                 check(symbolTable.lookup(height.getText()).getType() == INT, declaration, "Height variable is not int");
             }
         }else if(declaration.getType() == IMAGE && declaration.getDim() == null){
+            //if it does not have a dimension it must have an initializer of type IMAGE
+
+            rhs.visit(this, arg);
             check(declaration.getOp() != null, declaration, "Image must have an iniatilizer expression");
+            //check(rhs.getType() == IMAGE, declaration, "RHS must be type IMAGE"  );
         }
             else {
             if (rhs != null) {

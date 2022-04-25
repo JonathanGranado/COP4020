@@ -117,11 +117,12 @@ public class CodeGenVisitor implements ASTVisitor {
                 }
                 // image being assigned another image
                 else if (op != null && op.getKind() == IToken.Kind.ASSIGN) {
-
                     nameDef.visit((ASTVisitor) this, sb);
                     if (varDeclaration.getDim() != null) {
+                        sb.assign();
                         expr.visit(this, sb);
                     } else if (expr.getClass() == IdentExpr.class) {
+                        sb.assign();
                         expr.visit(this, sb);
                     } else {
                         sb.assign();
@@ -318,7 +319,7 @@ public class CodeGenVisitor implements ASTVisitor {
             left.visit(this, sb);
             sb.comma();
             right.visit(this, sb);
-            sb.rightParen().semi();
+            sb.rightParen();
         }
         // color  op color
         else if (leftType == Types.Type.COLOR && rightType == Types.Type.COLOR) {
