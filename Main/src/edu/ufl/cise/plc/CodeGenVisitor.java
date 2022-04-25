@@ -198,7 +198,11 @@ public class CodeGenVisitor implements ASTVisitor {
 //                } else {
 //                    sb.append(type.toString().toLowerCase() + " ");
 //                }
-                sb.append(type.toString().toLowerCase() + " ");
+                if(type == STRING){
+                    sb.append("String ");
+                }else{
+                    sb.append(type.toString().toLowerCase() + " ");
+                }
                 sb.append(name + " = ");
                 if (op.getKind() == IToken.Kind.ASSIGN) {
                     if (expr.getCoerceTo() != null && expr.getCoerceTo() != expr.getType()) {
@@ -207,9 +211,9 @@ public class CodeGenVisitor implements ASTVisitor {
                     expr.visit(this, sb);
                 } else if (op.getKind() == IToken.Kind.LARROW) {
 //                    sb.append(" = ");
-                    if (expr.getCoerceTo() != null && expr.getCoerceTo() != expr.getType()) {
-                        genTypeConversion(expr.getType(), expr.getCoerceTo(), sb);
-                    }
+//                    if (expr.getCoerceTo() != null && expr.getCoerceTo() != expr.getType()) {
+//                        genTypeConversion(expr.getType(), expr.getCoerceTo(), sb);
+//                    }
                     if (varDeclaration.getExpr().getType() == STRING) {
                         String typeLHS = varDeclaration.getNameDef().getType().toString();
                         sb.append("(" + typeLHS.toLowerCase() + ")");
@@ -376,16 +380,14 @@ public class CodeGenVisitor implements ASTVisitor {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         Types.Type coerceType = consoleExpr.getCoerceTo();
         if (coerceType == Types.Type.STRING) {
-            sb.append("\"");
-            Object value = ConsoleIO.readValueFromConsole(coerceType.toString(), "Enter string: ");
-            sb.append(value);
-            sb.append("\"");
+//            sb.append("\"");
+            sb.append("(String)ConsoleIO.readValueFromConsole(\"STRING\", \"Enter a string : \")");
+//            sb.append("\"");
         } else if (coerceType == Types.Type.COLOR) {
-            Object value = ConsoleIO.readValueFromConsole(coerceType.toString(), "Enter a three color values : ");
-            sb.append(value);
+//            Object value = ConsoleIO.readValueFromConsole(coerceType.toString(), "Enter a three color values : ");
+            sb.append("(ColorTuple)ConsoleIO.readValueFromConsole(\"COLOR\", \"Enter a three color values : \")");
         } else {
-            Object value = ConsoleIO.readValueFromConsole(coerceType.toString(), "Enter a " + coerceType.toString().toLowerCase() + ": ");
-            sb.append(value);
+            sb.append("(" + coerceType.toString().toLowerCase() + ")ConsoleIO.readValueFromConsole(\"" + coerceType + "\", \"Enter a input : \")");
         }
         return sb;
     }
@@ -533,7 +535,13 @@ public class CodeGenVisitor implements ASTVisitor {
                     sb.append("FileURLIO.readValueFromFile(" + url + ")").semi().newline();
                 }
                 sb.append("FileURLIO.closeFiles()");
-            } else {
+            }
+//            else if(expr.getType() == CONSOLE) {
+//                if(expr.getCoerceTo() == COLOR){
+//                    sb.append(readStatement.getName() + " = new ColorTuple")
+//                }
+//            }
+                else{
                 sb.append("\t\t").append(name + " ").assign();
                 expr.visit((ASTVisitor) this, sb);
             }
@@ -579,9 +587,9 @@ public class CodeGenVisitor implements ASTVisitor {
         String name = assignmentStatement.getName();
         Declaration lhs = assignmentStatement.getTargetDec();
         Expr rhs = assignmentStatement.getExpr();
-        Dimension dim = lhs.getDim();
 
         if (lhs != null && lhs.getType() == Types.Type.IMAGE && (rhs.getType() == Types.Type.IMAGE || rhs.getType() == Types.Type.COLOR)) {
+        Dimension dim = lhs.getDim();
             if (dim != null) {
                 String firstVar = assignmentStatement.getSelector().getX().getText();
                 String secondVar = assignmentStatement.getSelector().getY().getText();
