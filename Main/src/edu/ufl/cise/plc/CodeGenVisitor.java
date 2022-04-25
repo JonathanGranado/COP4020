@@ -178,9 +178,17 @@ public class CodeGenVisitor implements ASTVisitor {
             }
             sb.semi();
         }
-        else {
+        else {//
             // if no initializer
             if (op == null) {
+                if (nameDef.getType() == COLOR){
+                    sb.append("ColorTuple ");
+                } else if (nameDef.getType() == STRING){
+                    sb.append("String ");
+                } else {
+                    sb.append(nameDef.getType().name().toLowerCase());
+                }
+                sb.append(nameDef.getName());
                 sb.semi();
             } else {
                 String name = varDeclaration.getNameDef().getName();
@@ -497,7 +505,6 @@ public class CodeGenVisitor implements ASTVisitor {
         return sb;
     }
 
-
     public Object visitReadStatement(ReadStatement readStatement, Object arg) throws Exception {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         String name = readStatement.getName();
@@ -517,8 +524,14 @@ public class CodeGenVisitor implements ASTVisitor {
             }
             sb.append("FileURLIO.closeFiles()").semi().newline();
         } else {
-            sb.append("\t\t").append(name).assign();
-            expr.visit((ASTVisitor) this, sb);
+            if (targetType == COLOR){
+                sb.append("\t\t").append(name).assign();
+                sb.append("(ColorTuple)FileURLIO.readValueFromFile(" + url + ")").semi().newline();
+                sb.append("FileURLIO.closeFiles()");
+            } else {
+                sb.append("\t\t").append(name).assign();
+                expr.visit((ASTVisitor) this, sb);
+            }
             sb.semi().newline();
         }
         return sb;
