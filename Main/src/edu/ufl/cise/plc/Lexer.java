@@ -108,6 +108,7 @@ public class Lexer implements ILexer {
                                 startPos = pos;
                                 pos++;
                                 holdingToken += ch;
+                                holdingToken += "\"\"\n";
                             }
                             case '&' -> {
                                 startPos = pos - startPos;
@@ -313,7 +314,7 @@ public class Lexer implements ILexer {
                     case HAVE_QUOTE -> {
                         switch (ch) {
                             case '\"' -> {
-                                holdingToken += "\"";
+                                holdingToken += "\"\"\"";
                                 if(!backSlashFlagForQuote){
                                     holdingTokens.add(new Token(IToken.Kind.STRING_LIT, holdingToken, startPos, 1, lineNumber));
                                     holdingToken = "";
