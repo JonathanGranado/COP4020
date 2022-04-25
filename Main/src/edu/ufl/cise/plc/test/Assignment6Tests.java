@@ -1805,7 +1805,7 @@ public class Assignment6Tests {
 				         """;
 		ColorTuple result = new ColorTuple(128, 129, 130);
 		checkProgram(input, result);
-		checkFile("testWriteReadColor0", result);
+		checkFile("testWriteReadColor1", result);
 	}
 
 	@Test

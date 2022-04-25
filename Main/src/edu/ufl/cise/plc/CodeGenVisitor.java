@@ -188,7 +188,7 @@ public class CodeGenVisitor implements ASTVisitor {
                 } else {
                     sb.append(nameDef.getType().name().toLowerCase());
                 }
-                sb.append(nameDef.getName());
+                sb.append(" " + nameDef.getName());
                 sb.semi();
             } else {
                 String name = varDeclaration.getNameDef().getName();
@@ -528,8 +528,12 @@ public class CodeGenVisitor implements ASTVisitor {
                 sb.append("\t\t").append(name).assign();
                 sb.append("(ColorTuple)FileURLIO.readValueFromFile(" + url + ")").semi().newline();
                 sb.append("FileURLIO.closeFiles()");
-            } else {
-                sb.append("\t\t").append(name).assign();
+            } else if (targetType == FLOAT) {
+                sb.append("\t\t").append(name + " ").assign();
+                sb.append("(float)FileURLIO.readValueFromFile(" + url + ")").semi().newline();
+                sb.append("FileURLIO.closeFiles()");
+            }else{
+                sb.append("\t\t").append(name + " ").assign();
                 expr.visit((ASTVisitor) this, sb);
             }
             sb.semi().newline();
