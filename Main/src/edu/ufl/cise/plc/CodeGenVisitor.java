@@ -495,10 +495,10 @@ public class CodeGenVisitor implements ASTVisitor {
         } else {
             if (op.equals("getWidth")) {
                 sb.append("(" + unaryExpr.getExpr().getText() + ").getWidth(");
-                sb.append("))");
+                sb.append(")");
             } else if (op.equals("getHeight")) {
                 sb.append("(" + unaryExpr.getExpr().getText() + ").getHeight(");
-                sb.append("))");
+                sb.append(")");
             }
         }
         return sb;
@@ -527,16 +527,12 @@ public class CodeGenVisitor implements ASTVisitor {
                 if (targetType == COLOR) {
                     sb.append("\t\t").append(name).assign();
                     sb.append("(ColorTuple)FileURLIO.readValueFromFile(" + url + ")").semi().newline();
-                    sb.append("FileURLIO.closeFiles()");
-                } else if (targetType == FLOAT) {
+                } else if (targetType == FLOAT || targetType == INT || targetType == BOOLEAN) {
                     sb.append("\t\t").append(name + " ").assign();
-                    sb.append("(float)FileURLIO.readValueFromFile(" + url + ")").semi().newline();
-                    sb.append("FileURLIO.closeFiles()");
-                } else if (targetType == BOOLEAN) {
-                    sb.append("\t\t").append(name + " ").assign();
-                    sb.append("(boolean)FileURLIO.readValueFromFile(" + url + ")").semi().newline();
-                    sb.append("FileURLIO.closeFiles()");
+                    sb.append("(" +targetType.name().toLowerCase() + ")");
+                    sb.append("FileURLIO.readValueFromFile(" + url + ")").semi().newline();
                 }
+                sb.append("FileURLIO.closeFiles()");
             } else {
                 sb.append("\t\t").append(name + " ").assign();
                 expr.visit((ASTVisitor) this, sb);
