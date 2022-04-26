@@ -44,7 +44,7 @@ public class Assignment6Tests {
 	int TIMEOUT_SECONDS = 10;
 
 	boolean VERBOSE = true;
-	boolean SHOW_IMAGES = true;
+	boolean SHOW_IMAGES = false;
 	boolean PAUSE_IMAGES = true;
 	int PAUSE_MILLIS = 2000;
 

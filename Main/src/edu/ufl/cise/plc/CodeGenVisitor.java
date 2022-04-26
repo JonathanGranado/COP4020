@@ -108,7 +108,14 @@ public class CodeGenVisitor implements ASTVisitor {
                     sb.append("BufferedImage " + varDeclaration.getNameDef().getName() + " = FileURLIO.readImage(");
                     sb.append(url).comma().append(varDeclaration.getDim().getWidth().getText()).comma().append(varDeclaration.getDim().getHeight().getText()).rightParen().semi().newline();
                     sb.append("\t\tFileURLIO.closeFiles();").newline();
-                } else {
+                }else if(op != null && op.getKind() == IToken.Kind.ASSIGN){
+                    String url = varDeclaration.getExpr().getText();
+                    sb.append("BufferedImage " + varDeclaration.getNameDef().getName() + " = ImageOps.resize(" + url + ", ");
+                    varDeclaration.getDim().visit((ASTVisitor) this, sb);
+                    sb.rightParen().semi();
+                    sb.append("\t\tFileURLIO.closeFiles();").newline();
+                }
+                else {
                     nameDef.visit((ASTVisitor) this, sb);
                 }
             } else {
@@ -128,7 +135,7 @@ public class CodeGenVisitor implements ASTVisitor {
                     } else {
                         sb.assign();
                         expr.visit(this, sb);
-                        sb.semi().newline();
+//                        sb.semi().newline();
                     }
                     sb.semi();
                 }

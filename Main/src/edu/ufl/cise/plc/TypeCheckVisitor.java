@@ -346,7 +346,7 @@ public class TypeCheckVisitor implements ASTVisitor {
 
         Expr rhs = declaration.getExpr();
         //If type of variable is Image, it must either have an initializer expression of type IMAGE, or a Dimension
-        if (declaration.getType() == IMAGE && declaration.getDim() != null) {
+        if (declaration.getNameDef().getType() == IMAGE && declaration.getDim() != null) {
             Expr width = declaration.getDim().getWidth();
             Expr height = declaration.getDim().getHeight();
             // dimension must be either IntLitExpr or IdentExpr with type INT
@@ -361,12 +361,22 @@ public class TypeCheckVisitor implements ASTVisitor {
                 check(symbolTable.lookup(height.getText()).isInitialized(), declaration, "Height variable is not initialized");
                 check(symbolTable.lookup(height.getText()).getType() == INT, declaration, "Height variable is not int");
             }
-        }else if(declaration.getType() == IMAGE && declaration.getDim() == null){
+            declaration.getNameDef().setInitialized(true);
+        }else if(declaration.getType() == IMAGE && declaration.getDim() == null) {
             //if it does not have a dimension it must have an initializer of type IMAGE
 
-            rhs.visit(this, arg);
-            check(declaration.getOp() != null, declaration, "Image must have an iniatilizer expression");
-            //check(rhs.getType() == IMAGE, declaration, "RHS must be type IMAGE"  );
+//            check(rhs != null, declaration, "Image must have an iniatilizer expression");
+            if (declaration.getOp() == null) {
+//                    check(rhs.getType() == IMAGE, declaration, "RHS must be type IMAGE"  );
+                throw new TypeCheckException("RHS is not iniatilaized");
+            }else if (declaration.getExpr().getClass() == IdentExpr.class){
+                check(symbolTable.lookup(declaration.getExpr().getText()) != null, declaration, "not declaredd");
+//                if(symbolTable.lookup(declaration.getExpr().getText()).isInitialized()){
+//                    throw new TypeCheckException("NOT INTIALIZAED");
+//                }
+            }else{
+                rhs.visit(this, arg);
+            }
         }
             else {
             if (rhs != null) {
@@ -438,8 +448,12 @@ public class TypeCheckVisitor implements ASTVisitor {
     public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws Exception {
         Type returnType = root.getReturnType();  //This is why we save program in visitProgram.
         Type expressionType = (Type) returnStatement.getExpr().visit(this, arg);
-//        Declaration dec = symbolTable.lookup(returnStatement.getExpr().getText());
-//        check(dec.isInitialized(), returnStatement, "return rhs has not been initialized");
+        if(expressionType == INT || expressionType == STRING || expressionType == BOOLEAN || expressionType == FLOAT){
+            if(symbolTable.lookup(returnStatement.getExpr().getText()) != null){
+                Declaration dec = symbolTable.lookup(returnStatement.getExpr().getText());
+                check(dec.isInitialized(), returnStatement, "return rhs has not been initialized");
+            }
+        }
         check(returnType == expressionType, returnStatement, "return statement with invalid type");
         return null;
     }
