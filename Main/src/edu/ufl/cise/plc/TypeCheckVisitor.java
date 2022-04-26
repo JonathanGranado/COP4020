@@ -93,7 +93,7 @@ public class TypeCheckVisitor implements ASTVisitor {
         Type redType = (Type) colorExpr.getRed().visit(this, arg);
         Type greenType = (Type) colorExpr.getGreen().visit(this, arg);
         Type blueType = (Type) colorExpr.getBlue().visit(this, arg);
-        check(redType == greenType && redType == blueType, colorExpr, "color components must have same type");
+//        check(redType == greenType && redType == blueType, colorExpr, "color components must have same type");
         check(redType == Type.INT || redType == Type.FLOAT, colorExpr, "color component type must be int or float");
         Type exprType = (redType == Type.INT) ? Type.COLOR : Type.COLORFLOAT;
         colorExpr.setType(exprType);
