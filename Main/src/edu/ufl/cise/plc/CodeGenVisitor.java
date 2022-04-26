@@ -1,6 +1,7 @@
 package edu.ufl.cise.plc;
 
 import edu.ufl.cise.plc.ast.*;
+import edu.ufl.cise.plc.runtime.ColorTuple;
 import edu.ufl.cise.plc.runtime.ConsoleIO;
 
 import java.util.Iterator;
@@ -215,8 +216,16 @@ public class CodeGenVisitor implements ASTVisitor {
 //                        genTypeConversion(expr.getType(), expr.getCoerceTo(), sb);
 //                    }
                     if (varDeclaration.getExpr().getType() == STRING) {
-                        String typeLHS = varDeclaration.getNameDef().getType().toString();
-                        sb.append("(" + typeLHS.toLowerCase() + ")");
+                        Types.Type typeLHS = varDeclaration.getNameDef().getType();
+                        if (typeLHS == STRING){
+                            sb.append("(String)");
+                        } else if (typeLHS == COLOR){
+                            sb.append("ColorTuple");
+                        } else if (typeLHS == IMAGE){
+                            sb.append("(BufferedImage)");
+                        }else {
+                            sb.append("(" + typeLHS.toString().toLowerCase() + ")");
+                        }
                         sb.append("FileURLIO.readValueFromFile(" + varDeclaration.getExpr().getText() + ")");
                     } else {
                         expr.visit(this, sb);
@@ -448,7 +457,7 @@ public class CodeGenVisitor implements ASTVisitor {
 
     public Object visitStringLitExpr(StringLitExpr stringLitExpr, Object arg) throws Exception {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
-        sb.append("\"").append(stringLitExpr.getValue()).append("\"");
+        sb.append(stringLitExpr.getText());
         return sb;
     }
 

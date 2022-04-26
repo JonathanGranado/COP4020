@@ -94,8 +94,8 @@ public class TypeCheckVisitor implements ASTVisitor {
         Type greenType = (Type) colorExpr.getGreen().visit(this, arg);
         Type blueType = (Type) colorExpr.getBlue().visit(this, arg);
 //        check(redType == greenType && redType == blueType, colorExpr, "color components must have same type");
-        check(redType == Type.INT || redType == Type.FLOAT, colorExpr, "color component type must be int or float");
-        Type exprType = (redType == Type.INT) ? Type.COLOR : Type.COLORFLOAT;
+       // check(redType == Type.INT || redType == Type.FLOAT, colorExpr, "color component type must be int or float");
+        Type exprType = (redType == Type.INT ) ? Type.COLOR : Type.COLORFLOAT;
         colorExpr.setType(exprType);
         return exprType;
     }
@@ -450,8 +450,8 @@ public class TypeCheckVisitor implements ASTVisitor {
         check(expType == Type.IMAGE, unaryExprPostfix, "pixel selector can only be applied to image");
         unaryExprPostfix.getSelector().visit(this, arg);
         unaryExprPostfix.setType(Type.INT);
-        unaryExprPostfix.setCoerceTo(expType);
-        return expType;
+        unaryExprPostfix.setCoerceTo(COLOR);
+        return unaryExprPostfix.getType();
     }
 
     record Pair<T0, T1>(T0 t0, T1 t1) {
