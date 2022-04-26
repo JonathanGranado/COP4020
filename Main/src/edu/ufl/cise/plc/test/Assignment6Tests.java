@@ -46,7 +46,7 @@ public class Assignment6Tests {
 	boolean VERBOSE = true;
 	boolean SHOW_IMAGES = false;
 	boolean PAUSE_IMAGES = true;
-	int PAUSE_MILLIS = 2000;
+	int PAUSE_MILLIS = 200;
 
 
 	private Object show(Object obj) throws IOException {
