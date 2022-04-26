@@ -130,6 +130,7 @@ public class CodeGenVisitor implements ASTVisitor {
                         expr.visit(this, sb);
                         sb.semi().newline();
                     }
+                    sb.semi();
                 }
             }
         }

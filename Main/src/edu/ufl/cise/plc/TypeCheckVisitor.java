@@ -350,8 +350,8 @@ public class TypeCheckVisitor implements ASTVisitor {
             Expr width = declaration.getDim().getWidth();
             Expr height = declaration.getDim().getHeight();
             // dimension must be either IntLitExpr or IdentExpr with type INT
-            check((width.getClass() == IdentExpr.class || width.getClass() == IntLitExpr.class), declaration, "width is not an int lit or a variable");
-            check((height.getClass() == IdentExpr.class || height.getClass() == IntLitExpr.class), declaration, "height is not an int lit or a variable");
+//            check((width.getClass() == IdentExpr.class || width.getClass() == IntLitExpr.class), declaration, "width is not an int lit or a variable");
+//            check((height.getClass() == IdentExpr.class || height.getClass() == IntLitExpr.class), declaration, "height is not an int lit or a variable");
             // if type of dimension is IdentExpr, it must be an ident of type int and initialized
             if (width.getClass() == IdentExpr.class) {
                 check(symbolTable.lookup(width.getText()).isInitialized(), declaration, "Width variable is not initialized");
@@ -428,8 +428,8 @@ public class TypeCheckVisitor implements ASTVisitor {
 
     @Override
     public Object visitNameDefWithDim(NameDefWithDim nameDefWithDim, Object arg) throws Exception {
-        check(nameDefWithDim.getDim().getHeight().getType() == INT, nameDefWithDim, "height is not of type INT");
-        check(nameDefWithDim.getDim().getWidth().getType() == INT, nameDefWithDim, "width is not of type INT");
+//        check(nameDefWithDim.getDim().getHeight().getType() == INT, nameDefWithDim, "height is not of type INT");
+//        check(nameDefWithDim.getDim().getWidth().getType() == INT, nameDefWithDim, "width is not of type INT");
         symbolTable.insert(nameDefWithDim.getName(), nameDefWithDim);
         return null;
     }
@@ -451,7 +451,7 @@ public class TypeCheckVisitor implements ASTVisitor {
         unaryExprPostfix.getSelector().visit(this, arg);
         unaryExprPostfix.setType(Type.INT);
         unaryExprPostfix.setCoerceTo(COLOR);
-        return unaryExprPostfix.getType();
+        return COLOR;
     }
 
     record Pair<T0, T1>(T0 t0, T1 t1) {
