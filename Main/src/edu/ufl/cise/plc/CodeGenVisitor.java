@@ -511,8 +511,7 @@ public class CodeGenVisitor implements ASTVisitor {
         String name = readStatement.getName();
         Expr expr = readStatement.getSource();
         String url = readStatement.getSource().getText();
-//        String width = readStatement.getTargetDec().getDim().getWidth().getText();
-//        String height = readStatement.getTargetDec().getDim().getHeight().getText();
+
         Types.Type targetType = readStatement.getTargetDec().getType();
         if (targetType == Types.Type.IMAGE) {
             if (readStatement.getSelector() != null) {
@@ -533,6 +532,9 @@ public class CodeGenVisitor implements ASTVisitor {
                     sb.append("\t\t").append(name + " ").assign();
                     sb.append("(" +targetType.name().toLowerCase() + ")");
                     sb.append("FileURLIO.readValueFromFile(" + url + ")").semi().newline();
+                } else if (targetType == STRING){sb.append("\t\t").append(name).assign();
+                    sb.append("\t\t").append(name).assign();
+                    sb.append("(String)FileURLIO.readValueFromFile(" + url + ")").semi().newline();
                 }
                 sb.append("FileURLIO.closeFiles()");
             }
