@@ -198,9 +198,9 @@ public class CodeGenVisitor implements ASTVisitor {
 //                } else {
 //                    sb.append(type.toString().toLowerCase() + " ");
 //                }
-                if(type == STRING){
+                if (type == STRING) {
                     sb.append("String ");
-                }else{
+                } else {
                     sb.append(type.toString().toLowerCase() + " ");
                 }
                 sb.append(name + " = ");
@@ -530,7 +530,7 @@ public class CodeGenVisitor implements ASTVisitor {
                     sb.append("(ColorTuple)FileURLIO.readValueFromFile(" + url + ")").semi().newline();
                 } else if (targetType == FLOAT || targetType == INT || targetType == BOOLEAN) {
                     sb.append("\t\t").append(name + " ").assign();
-                    sb.append("(" +targetType.name().toLowerCase() + ")");
+                    sb.append("(" + targetType.name().toLowerCase() + ")");
                     sb.append("FileURLIO.readValueFromFile(" + url + ")").semi().newline();
                 } else if (targetType == STRING){sb.append("\t\t").append(name).assign();
                     sb.append("\t\t").append(name).assign();
@@ -543,7 +543,7 @@ public class CodeGenVisitor implements ASTVisitor {
 //                    sb.append(readStatement.getName() + " = new ColorTuple")
 //                }
 //            }
-                else{
+            else {
                 sb.append("\t\t").append(name + " ").assign();
                 expr.visit((ASTVisitor) this, sb);
             }
@@ -596,7 +596,7 @@ public class CodeGenVisitor implements ASTVisitor {
                 String firstVar = assignmentStatement.getSelector().getX().getText();
                 String secondVar = assignmentStatement.getSelector().getY().getText();
 
-                if (rhs.getType() == IMAGE) {
+                if (rhs.getCoerceTo() != COLOR) {
                     sb.append(assignmentStatement.getName() + " = ");
                     sb.append("ImageOpsBetter.resize(");
 //                  sb.append("ImageOpsBetter.binaryImageImageOp")
@@ -609,7 +609,6 @@ public class CodeGenVisitor implements ASTVisitor {
                     sb.append(assignmentStatement.getSelector().getX().getText() + "," + assignmentStatement.getSelector().getY().getText()).comma();
                     rhs.visit(this, sb);
                 } else if (rhs.getCoerceTo() == INT) {
-
                     sb.append("for(int " + firstVar + " = 0;" + firstVar + "< " + name + ".getWidth();" + firstVar + "++)").newline();
                     sb.append("\tfor(int " + secondVar + " = 0;" + secondVar + "< " + name + ".getHeight();" + secondVar + "++)").newline();
                     sb.append("ImageOpsBetter.setColor(" + lhs.getText()).comma();
