@@ -453,7 +453,12 @@ public class CodeGenVisitor implements ASTVisitor {
         CodeGenStringBuilder sb = (CodeGenStringBuilder) arg;
         int value = intLitExpr.getValue();
         if (intLitExpr.getCoerceTo() != null && intLitExpr.getCoerceTo() != INT) {
-            genTypeConversion(intLitExpr.getType(), intLitExpr.getCoerceTo(), sb);
+            if(intLitExpr.getCoerceTo() == COLOR){
+                sb.append("new ColorTuple(" + value + ")");
+                return sb;
+            } else {
+                genTypeConversion(intLitExpr.getType(), intLitExpr.getCoerceTo(), sb);
+            }
         }
         sb.append(value);
         return sb;
