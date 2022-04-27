@@ -366,7 +366,25 @@ public class CodeGenVisitor implements ASTVisitor {
             sb.comma();
             right.visit(this, sb);
             sb.rightParen().semi();
-        } else {
+        }
+        else if(binaryExpr.getCoerceTo() == COLOR){
+            sb.append("new ColorTuple(");
+            left.visit(this, sb);
+            if(op == IToken.Kind.PLUS){
+                sb.append(" + ");
+            }else if (op == IToken.Kind.MINUS){
+                sb.append(" - ");
+            }else if (op == IToken.Kind.MOD){
+                sb.append(" % ");
+            }else if(op == IToken.Kind.TIMES){
+                sb.append(" * ");
+            }else if(op == IToken.Kind.DIV){
+                sb.append(" / ");
+            }
+            right.visit(this, sb);
+            sb.rightParen();
+        }
+        else {
 
             if (op == IToken.Kind.NOT_EQUALS) {
                 sb.append("!");
@@ -622,7 +640,7 @@ public class CodeGenVisitor implements ASTVisitor {
         Declaration lhs = assignmentStatement.getTargetDec();
         Expr rhs = assignmentStatement.getExpr();
 
-        if (lhs != null && lhs.getType() == Types.Type.IMAGE && (rhs.getType() == Types.Type.IMAGE || rhs.getType() == Types.Type.COLOR)) {
+        if (lhs != null && lhs.getType() == Types.Type.IMAGE && (rhs.getType() == Types.Type.IMAGE || rhs.getType() == Types.Type.COLOR || rhs.getType() == INT) ) {
         Dimension dim = lhs.getDim();
             if (dim != null) {
                 String firstVar = assignmentStatement.getSelector().getX().getText();
@@ -647,7 +665,6 @@ public class CodeGenVisitor implements ASTVisitor {
                     rhs.visit(this, sb);// image on the right
                     sb.append(lhs.getDim().getWidth().getText() + "," + lhs.getDim().getHeight().getText()).comma();
                     visitColorExpr((ColorExpr) rhs, sb);
-//                    sb.rightParen();
                 }
             }
             // if NOT declared with dimension/size
@@ -656,8 +673,8 @@ public class CodeGenVisitor implements ASTVisitor {
                 rhs.visit(this, sb);
             }
             sb.rightParen().semi().newline();
-
-        } else {
+        }
+        else {
             sb.append(name).assign();
             if (rhs.getCoerceTo() != null && rhs.getType() != rhs.getCoerceTo()) {
                 genTypeConversion(rhs.getType(), rhs.getCoerceTo(), sb);
