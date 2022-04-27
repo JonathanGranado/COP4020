@@ -108,7 +108,9 @@ public class Lexer implements ILexer {
                                 startPos = pos;
                                 pos++;
                                 holdingToken += ch;
+                                holdingToken += "\"\"\n";
                             }
+
                             case '&' -> {
                                 startPos = pos - startPos;
                                 holdingTokens.add(new Token(IToken.Kind.AND, "&", startPos, 1, lineNumber));
@@ -313,11 +315,13 @@ public class Lexer implements ILexer {
                     case HAVE_QUOTE -> {
                         switch (ch) {
                             case '\"' -> {
-                                holdingToken += "\"";
                                 if(!backSlashFlagForQuote){
+                                    holdingToken += "\"\"\"";
                                     holdingTokens.add(new Token(IToken.Kind.STRING_LIT, holdingToken, startPos, 1, lineNumber));
                                     holdingToken = "";
                                     state = State.START;
+                                } else {
+                                    holdingToken += "\"";
                                 }
                                 pos++;
                             }
@@ -326,8 +330,9 @@ public class Lexer implements ILexer {
                                     throw new LexicalException("Missing a \" to end string");
                                 }
                             }
+
                             default -> {
-                                backSlashFlagForQuote = ch == '\\' && chars[pos + 1] == '\"';
+                                backSlashFlagForQuote = (ch == '\\') && (chars[pos + 1] == '\"');
                                 holdingToken += ch;
                                 pos++;
                             }

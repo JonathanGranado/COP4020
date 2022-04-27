@@ -93,9 +93,9 @@ public class TypeCheckVisitor implements ASTVisitor {
         Type redType = (Type) colorExpr.getRed().visit(this, arg);
         Type greenType = (Type) colorExpr.getGreen().visit(this, arg);
         Type blueType = (Type) colorExpr.getBlue().visit(this, arg);
-        check(redType == greenType && redType == blueType, colorExpr, "color components must have same type");
-        check(redType == Type.INT || redType == Type.FLOAT, colorExpr, "color component type must be int or float");
-        Type exprType = (redType == Type.INT) ? Type.COLOR : Type.COLORFLOAT;
+//        check(redType == greenType && redType == blueType, colorExpr, "color components must have same type");
+       // check(redType == Type.INT || redType == Type.FLOAT, colorExpr, "color component type must be int or float");
+        Type exprType = (redType == Type.INT ) ? Type.COLOR : Type.COLORFLOAT;
         colorExpr.setType(exprType);
         return exprType;
     }
@@ -202,7 +202,7 @@ public class TypeCheckVisitor implements ASTVisitor {
         Type falseCase = (Type) conditionalExpr.getFalseCase().visit(this, arg);
 
         check(condition == BOOLEAN, conditionalExpr, "type of condition must be boolean");
-        check(trueCase == falseCase, conditionalExpr, "type of true case must be equal to false case");
+//        check(trueCase == falseCase, conditionalExpr, "type of true case must be equal to false case");
         conditionalExpr.setType(trueCase);
         return trueCase;
     }
@@ -256,7 +256,7 @@ public class TypeCheckVisitor implements ASTVisitor {
                 assignmentStatement.getExpr().setCoerceTo(COLORFLOAT);
 
         } else {
-
+        // if lhs is an image with a pixel selector
             PixelSelector selector = assignmentStatement.getSelector();
             Expr x = selector.getX();
             Expr y = selector.getY();
@@ -346,12 +346,12 @@ public class TypeCheckVisitor implements ASTVisitor {
 
         Expr rhs = declaration.getExpr();
         //If type of variable is Image, it must either have an initializer expression of type IMAGE, or a Dimension
-        if (declaration.getType() == IMAGE && declaration.getDim() != null) {
+        if (declaration.getNameDef().getType() == IMAGE && declaration.getDim() != null) {
             Expr width = declaration.getDim().getWidth();
             Expr height = declaration.getDim().getHeight();
             // dimension must be either IntLitExpr or IdentExpr with type INT
-            check((width.getClass() == IdentExpr.class || width.getClass() == IntLitExpr.class), declaration, "width is not an int lit or a variable");
-            check((height.getClass() == IdentExpr.class || height.getClass() == IntLitExpr.class), declaration, "height is not an int lit or a variable");
+//            check((width.getClass() == IdentExpr.class || width.getClass() == IntLitExpr.class), declaration, "width is not an int lit or a variable");
+//            check((height.getClass() == IdentExpr.class || height.getClass() == IntLitExpr.class), declaration, "height is not an int lit or a variable");
             // if type of dimension is IdentExpr, it must be an ident of type int and initialized
             if (width.getClass() == IdentExpr.class) {
                 check(symbolTable.lookup(width.getText()).isInitialized(), declaration, "Width variable is not initialized");
@@ -361,7 +361,24 @@ public class TypeCheckVisitor implements ASTVisitor {
                 check(symbolTable.lookup(height.getText()).isInitialized(), declaration, "Height variable is not initialized");
                 check(symbolTable.lookup(height.getText()).getType() == INT, declaration, "Height variable is not int");
             }
-        } else {
+            declaration.getNameDef().setInitialized(true);
+        }else if(declaration.getType() == IMAGE && declaration.getDim() == null) {
+            //if it does not have a dimension it must have an initializer of type IMAGE
+
+//            check(rhs != null, declaration, "Image must have an iniatilizer expression");
+            if (declaration.getOp() == null) {
+//                    check(rhs.getType() == IMAGE, declaration, "RHS must be type IMAGE"  );
+                throw new TypeCheckException("RHS is not iniatilaized");
+            }else if (declaration.getExpr().getClass() == IdentExpr.class){
+                check(symbolTable.lookup(declaration.getExpr().getText()) != null, declaration, "not declaredd");
+//                if(symbolTable.lookup(declaration.getExpr().getText()).isInitialized()){
+//                    throw new TypeCheckException("NOT INTIALIZAED");
+//                }
+            }else{
+                rhs.visit(this, arg);
+            }
+        }
+            else {
             if (rhs != null) {
                 Declaration rhsDec = symbolTable.lookup(rhs.getText());
                 if (rhs.getClass() == IdentExpr.class) {
@@ -409,14 +426,20 @@ public class TypeCheckVisitor implements ASTVisitor {
 
     @Override
     public Object visitNameDef(NameDef nameDef, Object arg) throws Exception {
+        if(symbolTable.lookup(nameDef.getName()) != null){
+            throw new TypeCheckException("variable already used");
+        }
+//        if(root.getParams().contains(nameDef.getName())){
+//            throw new TypeCheckException("variable is used in params");
+//        }
         symbolTable.insert(nameDef.getName(), nameDef);
         return null;
     }
 
     @Override
     public Object visitNameDefWithDim(NameDefWithDim nameDefWithDim, Object arg) throws Exception {
-        check(nameDefWithDim.getDim().getHeight().getType() == INT, nameDefWithDim, "height is not of type INT");
-        check(nameDefWithDim.getDim().getWidth().getType() == INT, nameDefWithDim, "width is not of type INT");
+//        check(nameDefWithDim.getDim().getHeight().getType() == INT, nameDefWithDim, "height is not of type INT");
+//        check(nameDefWithDim.getDim().getWidth().getType() == INT, nameDefWithDim, "width is not of type INT");
         symbolTable.insert(nameDefWithDim.getName(), nameDefWithDim);
         return null;
     }
@@ -425,10 +448,12 @@ public class TypeCheckVisitor implements ASTVisitor {
     public Object visitReturnStatement(ReturnStatement returnStatement, Object arg) throws Exception {
         Type returnType = root.getReturnType();  //This is why we save program in visitProgram.
         Type expressionType = (Type) returnStatement.getExpr().visit(this, arg);
-//        if (returnStatement.getExpr().getClass() == IdentExpr.class){
-//            Declaration dec = symbolTable.lookup(returnStatement.getExpr().getText());
-//            check(dec.isInitialized(), returnStatement, "return rhs has not been initialized");
-//        }
+        if(expressionType == INT || expressionType == STRING || expressionType == BOOLEAN || expressionType == FLOAT){
+            if(symbolTable.lookup(returnStatement.getExpr().getText()) != null){
+                Declaration dec = symbolTable.lookup(returnStatement.getExpr().getText());
+                check(dec.isInitialized(), returnStatement, "return rhs has not been initialized");
+            }
+        }
         check(returnType == expressionType, returnStatement, "return statement with invalid type");
         return null;
     }
@@ -439,8 +464,8 @@ public class TypeCheckVisitor implements ASTVisitor {
         check(expType == Type.IMAGE, unaryExprPostfix, "pixel selector can only be applied to image");
         unaryExprPostfix.getSelector().visit(this, arg);
         unaryExprPostfix.setType(Type.INT);
-        unaryExprPostfix.setCoerceTo(expType);
-        return expType;
+        unaryExprPostfix.setCoerceTo(COLOR);
+        return COLOR;
     }
 
     record Pair<T0, T1>(T0 t0, T1 t1) {

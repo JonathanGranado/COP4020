@@ -44,9 +44,9 @@ public class Assignment6Tests {
 	int TIMEOUT_SECONDS = 10;
 
 	boolean VERBOSE = true;
-	boolean SHOW_IMAGES = true;
+	boolean SHOW_IMAGES = false;
 	boolean PAUSE_IMAGES = true;
-	int PAUSE_MILLIS = 2000;
+	int PAUSE_MILLIS = 200;
 
 
 	private Object show(Object obj) throws IOException {
@@ -1805,7 +1805,7 @@ public class Assignment6Tests {
 				         """;
 		ColorTuple result = new ColorTuple(128, 129, 130);
 		checkProgram(input, result);
-		checkFile("testWriteReadColor0", result);
+		checkFile("testWriteReadColor1", result);
 	}
 
 	@Test
@@ -1962,6 +1962,7 @@ public class Assignment6Tests {
 		showRef(refImage);
 		checkProgram(input, refImage);
 	}
+
 
 	@Test
 	void testScannerInput0() throws Exception {
