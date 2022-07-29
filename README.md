@@ -1,4 +1,2 @@
 # COP4020
-# Assignment 1 - Lexer
-  - Created a lexer that will extend tokens as long as possible. Will return the next token. 
-# Assignment 2 - Parser 
+# A project that will generate Java byte code by compiling a syntax-similar langauge to Java. The main four parts are the Lexer, Parser, Type Checker, and Code Generation. 
